@@ -5,275 +5,298 @@ use IPC::Shareable;
 use XML::Simple;
 use Data::Dumper;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
 sub _getFromCache {
 
-my $self=shift;
-my $cache= $self->{cache} ;
-my $cog;
-my $ttl;
- tie %IPC_CONFIG,'IPC::Shareable',$cache ,
-    { create => 1,
-     mode =>0666 ,
-    #  destroy => 1
-        };
-unless (keys ( %IPC_CONFIG))  {# the cache is empty , we can create it
+    my $self  = shift;
+    my $cache = $self->{cache};
+    my $cog;
+    my $ttl;
+    tie %IPC_CONFIG, 'IPC::Shareable', $cache, {
+        create => 1,
+        mode   => 0666,
 
-#first I read the xml file 
-###  read file 
-$self->_readFile; 
-## write cache 
-$self->_writeCache;
-$cog= $self->{config};
-} else {  # the cache exists but is it  good 
-$ttl= $IPC_CONFIG{TTL};
-$self->{ttl}= $ttl;
-$self->{avaiable}= $IPC_CONFIG{AVAIABLE};
-my %tmp= %IPC_CONFIG;
-my $tmpvar =$tmp{config} ; 
-my $it =eval  $tmpvar ; 
-$self->{config} =$it;
-if ($IPC_CONFIG{AVAIABLE} eq 'RELOAD') {
-$self->_readFile;
-$self->_writeCache;
-$cog= $self->{config};
-return ($cog) ;
-		} 
-if ($IPC_CONFIG{AVAIABLE} eq 'DESTROY') {
-$self->_readFile;
-$self->_deleteCache;
-delete $self->{cache};
-$cog= $self->{config};
-return ($cog) ;
-		} 
-$cog= $self->{config};
+        #  destroy => 1
+    };
+    unless ( keys(%IPC_CONFIG) ) {
 
-#### all is good we must compare time and ttl 
-return ($cog) if ($self->{ttl}==0) ;
-my $timenow = time ;
-my $timecalc = $self->{avaiable} + $self->{ttl};
-if ($timenow > $timecalc) { # the cache is too old 
-$self->_readFile;
-$self->_writeCache;
+        #first I read the xml file
+        $self->_readFile;
+        ## write cache
+        $self->_writeCache;
+        $cog = $self->{config};
+    }
+    else {
 
-} 
-$cog= $self->{config};
-return ($cog);
+        # the cache exists but isn't good
+        $ttl               = $IPC_CONFIG{TTL};
+        $self->{ttl}       = $ttl;
+        $self->{available} = $IPC_CONFIG{AVAILABLE};
+        my %tmp = %IPC_CONFIG;
+        my $tmpvar  = $tmp{config};
+        my $it = eval $tmpvar;
+        $self->{config} = $it;
+        if ( $IPC_CONFIG{AVAILABLE} eq 'RELOAD' ) {
+            $self->_readFile;
+            $self->_writeCache;
+            $cog = $self->{config};
+            return ($cog);
+        }
+        if ( $IPC_CONFIG{AVAILABLE} eq 'DESTROY' ) {
+            $self->_readFile;
+            $self->_deleteCache;
+            delete $self->{cache};
+            $cog = $self->{config};
+            return ($cog);
+        }
+        $cog = $self->{config};
 
+        # all is good we must compare time and ttl
+        return ($cog) if ( $self->{ttl} == 0 );
+        my $timenow  = time;
+        my $timecalc = $self->{available} + $self->{ttl};
+        if ( $timenow > $timecalc ) {    # the cache is too old
+            $self->_readFile;
+            $self->_writeCache;
+
+        }
+        $cog = $self->{config};
+        return ($cog);
+
+    }
 }
-} 
+
 sub destroy {
-my $self=shift;
-$self->_deleteCache;
-delete $self->{cache};
-1;  
+    my $self = shift;
+    $self->_deleteCache;
+    delete $self->{cache};
 }
-####   function in order to manege cache conf from command line
-sub f_delete  {
-my $arg =shift ;
-tie %IPC_CONFIG,'IPC::Shareable',$arg ,
-                 { create => 1,
-                   mode =>0666 ,
-                  # destroy => 1
-                       };
-## lock
-(tied %IPC_CONFIG)->shlock;
 
-tied(%IPC_CONFIG)->remove;
+#   function used to manage cache conf from command line
+sub f_delete {
+    my $arg = shift;
+    tie %IPC_CONFIG, 'IPC::Shareable', $arg, {
+        create => 1,
+        mode   => 0666,
 
-## unlock
-(tied %IPC_CONFIG)->shunlock;
+        # destroy => 1
+    };
 
-return (0);
+    # lock
+    ( tied %IPC_CONFIG )->shlock;
+
+    tied(%IPC_CONFIG)->remove;
+
+    # unlock
+    ( tied %IPC_CONFIG )->shunlock;
+
+    return (0);
 }
-sub f_reload  {
-my $arg =shift ;
-tie %IPC_CONFIG,'IPC::Shareable',$arg ,
-                 { create => 1,
-                   mode =>0666 ,
-                  # destroy => 1
-                       };
-## lock
-(tied %IPC_CONFIG)->shlock;
-$IPC_CONFIG{ttl}='1' ;
 
-$IPC_CONFIG{AVAIABLE}='RELOAD' ;
+sub f_reload {
+    my $arg = shift;
+    tie %IPC_CONFIG, 'IPC::Shareable', $arg, {
+        create => 1,
+        mode   => 0666,
 
-## unlock
-(tied %IPC_CONFIG)->shunlock;
+        # destroy => 1
+    };
 
-return (0);
+    # lock
+    ( tied %IPC_CONFIG )->shlock;
+    $IPC_CONFIG{ttl} = '1';
+
+    $IPC_CONFIG{AVAILABLE} = 'RELOAD';
+
+    # unlock
+    ( tied %IPC_CONFIG )->shunlock;
+
+    return (0);
 }
-sub f_dump  {
-my $arg =shift ;
-tie %IPC_CONFIG,'IPC::Shareable',$arg ,
-                 { create => 1,
-                   mode =>0666 ,
-                  # destroy => 1
-                       };
-$Data::Dumper::Indent=1;
-my $ligne= Dumper(\%IPC_CONFIG) ;
-print "$ligne\n";
 
-return "OK\n";
+sub f_dump {
+    my $arg = shift;
+    tie %IPC_CONFIG, 'IPC::Shareable', $arg, {
+        create => 1,
+        mode   => 0666,
+
+        # destroy => 1
+    };
+    $Data::Dumper::Indent = 1;
+    my $ligne = Dumper( \%IPC_CONFIG );
+    print "$ligne\n";
+
+    return "OK\n";
 }
 
 sub _readFile {
-my $self = shift;
-my ($par,$config);
-my $file= $self->{file};
-my $cache= $self->{cache} ;
-$config= XMLin($file,ForceArray=>1);
-# I extract info about the cache ttl
+    my $self = shift;
+    my ( $par, $config );
+    my   $file   = $self->{file};
+    my  $cache  = $self->{cache};
+    $config = XMLin( $file, ForceArray => 1 );
 
-my $cache_param = $config->{cache};
-if ($cache_param->{$cache})  { # there are sereval cache descriptors 
-    $par= $cache_param->{$cache}{ConfigTtl}; }  else 
-    { # there  is a single descriptor  I must match the cache name.
-         $par= $cache_param->{ConfigTtl} if $cache_param->{id} eq $cache; }
+    # I extract info about the cache ttl
 
-$self->{ttl}= $par||'0';
-$self->{config}= $config;
-return 1;
+    my $cache_param = $config->{cache};
+    if ( $cache_param->{$cache} ) {    # there are sereval cache descriptors
+        $par = $cache_param->{$cache}{ConfigTtl};
+    }
+    else {    # there  is a single descriptor  I must match the cache name.
+        $par = $cache_param->{ConfigTtl} if $cache_param->{id} eq $cache;
+    }
+
+    $self->{ttl} = $par || '0';
+    $self->{config} = $config;
+    1;
 }
+
 sub _deleteCache {
-my $self = shift;
-my $cache=$self->{cache};
+    my $self = shift;
+    my $cache = $self->{cache};
 
-tie %IPC_CONFIG,'IPC::Shareable',$cache ,
-                 { create => 1,
-                   mode =>0666 ,
-                  # destroy => 1
-                       };
-## lock 
-(tied %IPC_CONFIG)->shlock;
+    tie %IPC_CONFIG, 'IPC::Shareable', $cache, {
+        create => 1,
+        mode   => 0666,
 
-tied(%IPC_CONFIG)->remove;
+        # destroy => 1
+    };
 
-## unlock
-(tied %IPC_CONFIG)->shunlock;
+    # lock
+    ( tied %IPC_CONFIG )->shlock;
+
+    tied(%IPC_CONFIG)->remove;
+
+    # unlock
+    ( tied %IPC_CONFIG )->shunlock;
 }
- 
+
 sub _writeCache {
-my $self = shift;
-my $time=time;
-my $cache= $self->{cache} ;
-my $config=$self->{config};
-$Data::Dumper::Purity=1;
-$Data::Dumper::Terse=1;
-my $configs=Dumper ($config);
-my $ttl=$self->{ttl};
+    my $self   = shift;
+    my $time   = time;
+    my $cache  = $self->{cache};
+    my $config = $self->{config};
+    $Data::Dumper::Purity = 1;
+    $Data::Dumper::Terse  = 1;
+    my $configs = Dumper($config);
+    my $ttl = $self->{ttl};
 
- (tied %IPC_CONFIG)->shlock;
- delete $IPC_CONFIG{config};
- %IPC_CONFIG=();
- (tied %IPC_CONFIG)->remove;
- (tied %IPC_CONFIG)->shunlock;
-tie %IPC_CONFIG,'IPC::Shareable',$cache ,
-                 { create => 1,
-                   mode =>0660 ,
-                #   destroy => 1
-                       };
- (tied %IPC_CONFIG)->shlock;
-$IPC_CONFIG{config}= $configs;
-$IPC_CONFIG{TTL}= $ttl;
-$IPC_CONFIG{AVAIABLE}= $time;
-##  unlock 
- (tied %IPC_CONFIG)->shunlock;
+    ( tied %IPC_CONFIG )->shlock;
+    delete $IPC_CONFIG{config};
+    %IPC_CONFIG = ();
+    ( tied %IPC_CONFIG )->remove;
+    ( tied %IPC_CONFIG )->shunlock;
+    tie %IPC_CONFIG, 'IPC::Shareable', $cache, {
+        create => 1,
+        mode   => 0660,
 
-return 1;
+        #   destroy => 1
+    };
+    ( tied %IPC_CONFIG )->shlock;
+    $IPC_CONFIG{config}    = $configs;
+    $IPC_CONFIG{TTL}       = $ttl;
+    $IPC_CONFIG{AVAILABLE} = $time;
+
+    #  unlock
+    ( tied %IPC_CONFIG )->shunlock;
+
+    return 1;
 }
+
 sub new {
-my $class =shift;
-my %conf=@_;
+    my $class = shift;
+    my %conf  = @_;
 
-my $self= bless {
+    my $self = bless {
 
-},ref($class)||$class;
-$self->{file}= $conf{file} if $conf{file};
-$self->{cache}= $conf{cache}  if $conf{cache};
-return $self;
+      },
+      ref($class) || $class;
+    $self->{file}  = $conf{file}  if $conf{file};
+    $self->{cache} = $conf{cache} if $conf{cache};
+    return $self;
 }
+
 sub getDomain {
-    my $self= shift;
-    my $domain=shift;
-    my $config= $self->getAllConfig ;
-     unless ($domain) { 
-       my  $d = ( keys %{$config->{domain}});
-       die "Ambigious domain\n" if ($d != 1) ;
-  ( $domain) =   ( keys %{$config->{domain}});
-                   }
- 
-    my $cdomain= $config->{domain}{$domain} ;
-    return ($cdomain); 
+    my $self   = shift;
+    my $domain = shift;
+    my $config = $self->getAllConfig;
+    unless ($domain) {
+        my $d = ( keys %{ $config->{domain} } );
+        die "Ambigious domain\n" if ( $d != 1 );
+        ($domain) = ( keys %{ $config->{domain} } );
+    }
+
+    my $cdomain = $config->{domain}{$domain};
+    return ($cdomain);
 
 }
-sub findParagraph  {
-my $self =shift;
-my $chapitre =shift;
-my $motif =shift;
-my $config= $self->getAllConfig ;
- my $parag;
-if ($chapitre && $motif ) {   
-  $parag= $config->{$chapitre}->{$motif} ;}
-   else  {
-  $parag= $config->{$chapitre} ;}
-return ($parag); 
-} 
+
+sub findParagraph {
+    my ( $self, $chapitre, $motif ) = @_;
+    my $config = $self->getAllConfig;
+    my $parag;
+    if ( $chapitre && $motif ) {
+        $parag = $config->{$chapitre}->{$motif};
+    }
+    else {
+        $parag = $config->{$chapitre};
+    }
+    return ($parag);
+}
+
 sub formateLineHash {
-    my $self=shift;
-    my $line =shift;
-    my $motif=shift;;
-    my $replace= shift;
- my %cf;  
-  my $t ;
-    if ($line=~/^\(/ ) { $t=$line ;} 
-    else {  
-    $t= "($line );";
-       }
+    my ( $self, $line, $motif, $replace ) = @_;
+    my %cf;
+    my $t;
+    if ( $line =~ /^\(/ ) {
+        $t = $line;
+    }
+    else {
+        $t = "($line );";
+    }
 
-%cf =eval $t;
-  if ($motif) {  
-       for (values  %cf) {
+    %cf = eval $t;
+    if ($motif) {
+        for ( values %cf ) {
             s/$motif/$replace/;
-                         }
-              }
-    return (\%cf) ;
-} 
-sub formateLineArray {
-    my $self=shift;
-    my $line =shift;
-    my $motif=shift;;
-    my $replace= shift;
- my @cf;  
-  my $t ;
-    if ($line=~/^\[/ ) { $t=$line ;} 
-    else {  
-    $t= "[$line ];";
-       }
-@cf =eval $t;
-  if ($motif) {  
-       for (  @cf) {
-            s/$motif/$replace/;
-                         }
-              }
-    return (\@cf) ;
-} 
-sub getAllConfig {
-my $self = shift;
-my $config;
-my $file= $self->{file} ;
-if ($self->{cache})   {  #  cache is avaiable 
-$config = $self->_getFromCache;
-
-} else { # cache forbiden 
-$config= XMLin($file);
-
+        }
+    }
+    return ( \%cf );
 }
-return $config;
+
+sub formateLineArray {
+    my ( $self, $line, $motif, $replace ) = @_;
+    my @cf;
+    my $t;
+    if ( $line =~ /^\[/ ) { $t = $line; }
+    else {
+        $t = "[$line ];";
+    }
+    @cf = eval $t;
+    if ($motif) {
+        for (@cf) {
+            s/$motif/$replace/;
+        }
+    }
+    return ( \@cf );
+}
+
+sub getAllConfig {
+    my $self = shift;
+    my $config;
+    my $file = $self->{file};
+    if ( $self->{cache} ) {    #  cache is available
+        $config = $self->_getFromCache;
+
+    }
+    else {                     # cache forbidden
+        $config = XMLin($file);
+
+    }
+    return $config;
 }
 1;
 __END__
@@ -307,28 +330,42 @@ Lemonldap::Config::Parameters - Perl extension for lemonldap SSO system
 
  or by command line 
 
- perl -e "use Lemonldap::Config::Parameters;Lemonldap::Config::Parameters::f_delete('CONF');"
+ perl -e "use Lemonldap::Config::Parameters;
+Lemonldap::Config::Parameters::f_delete('CONF');"
   
 
 =head1 DESCRIPTION
 
 Lemonldap is a SSO system under GPL. 
 
-Login page , handlers must retrieve their configs in an unique file eg :"applications.xml"
-This file has  a XML structrure . The parsing phase may be heavy . So lemonldap can cache the result of parsing in memory with IPC.
-For activing the cache you must have in the config :
+Login page , handlers must retrieve their configs in an unique file eg
+:"applications.xml".
+
+This file has a XML structrure. The parsing phase may be heavy, so lemonldap
+can cache the result of parsing in memory with IPC. For activing the cache you
+must have in the config :
 
  <cache id="CONF" ConfigTtl="1000"> 
  </cache>
-with :  name='CONF' it's the  GLUE value : four letters (see  IPC::Shareable documentation) .
+with :  name='CONF' it's the  GLUE value : four letters (see  IPC::Shareable
+documentation).
         ttl: time to live in second   ( 0 for not reload ) 
  if ttl is too short the config file will be reload very offen .
   
  You can force the reload by command line  
-    perl -e "use Lemonldap::Config::Parameters;Parameters::f_delete('CONF');"
-or  perl -e "use Lemonldap::Config::Parameters;Parameters::f_reload('CONF');"
 
- WITHOUT CACHE SPECIFICATION , LEMONLDAP DOESN'T USE CACHE ! It  will read and parse config file each time.
+ perl -e "use Lemonldap::Config::Parameters;
+ Lemonldap::Config::Parameters::f_reload('CONF');"
+
+ or 
+
+ perl -e "use Lemonldap::Config::Parameters;
+ Lemonldap::Config::Parameters::f_delete('CONF');"
+
+or  perl -e "use Lemonldap::Config::Parameters; Parameters::f_reload('CONF');"
+
+ WITHOUT CACHE SPECIFICATION , LEMONLDAP DOESN'T USE CACHE ! It  will read and
+parse config file each time.
  
 
 =head1 METHODS
@@ -354,7 +391,8 @@ eg :
            cookie=".foo.bar"
            path ="/" 
            templates_dir="/opt/apache/portail/templates"
-           templates_options =  "ABSOLUTE     => '1', INCLUDE_PATH => 'templates_dir'" 
+           templates_options =  "ABSOLUTE     => '1', INCLUDE_PATH =>
+'templates_dir'"
            login ="http://cportail.foo.bar/portail/accueil.pl"
            menu= "http://cportail.foo.bar/portail/application.pl"   
            ldap_server ="cpldap.foo.bar"
@@ -387,7 +425,8 @@ eg :
 
      or  formateLineHash(string:line,string:motif,string:key);
 
- Return a anonyme reference on  hash  and may replace the motif in the value of key by the value of another key  :
+ Return a anonyme reference on  hash  and may replace the motif in the value of
+key by the value of another key  :
 
  eg 
 
@@ -405,16 +444,17 @@ eg :
   $ligne can be use directly like option for somes instructions
 
 =head2  ref_of_array : formateLineArray(string:line);
+or  formateLineArray(string:line,string:motif,string:key);
 
-     or  formateLineArray(string:line,string:motif,string:key);
+Return a anonyme reference on  array  and may replace the motif in the element
+by the value of another key  :
 
- Return a anonyme reference on  array  and may replace the motif in the element by the value of another key  :
-
-   the return value can be use directly like option for somes instructions
+  the return value can be use directly like option for somes instructions
 
 =head2 findParagraph(chapter[,section])
    
- Find and return a reference of chapter finds in xml file , a section can be specified.
+Find and return a reference of chapter finds in xml file , a section can be
+specified.
 
 =head1 Functions
 

@@ -6,3 +6,6 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
 0.02  Thu Feb  17   2005
         - adapte ttl tag at xml model
         - modify refres method o  
+0.03  Mon Feb  21   2005
+        - minors corrections 
+        - source  more readable  with perltidy 
