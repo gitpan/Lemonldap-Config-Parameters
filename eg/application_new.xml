@@ -1,0 +1,60 @@
+<lemonconfig>
+<menu>
+
+     <rubrique id="rb1"
+               name="Applications DGI/DGCP">
+          <appli id="OCT"
+                 name="Intranet commun DGI/DGCP"
+                 url="http:/icc.int.appli.cp/icc/index.php"
+                 >
+          </appli>
+          <appli id="cpc"
+                 name="CPC"
+                 url="http://lancelotcpc.appli.cp/cpc/init.php"
+                 >
+          </appli>
+     </rubrique>
+
+
+</menu>
+
+<domain    id="appli.dgi"
+           Cookie="lemon"
+           templates_dir="/opt/apache_dev/dgi/templates"
+           templates_options =  "ABSOLUTE     => '1', INCLUDE_PATH => 'templates_dir'"
+           Portal ="http://cpportail.appli.dgi/portailtest/accueil_obj.pl"
+           Menu= "http://cpportail.appli.dgi/portailtest/application_new.pl"
+           ldap_server ="10.ip.ip.ip"
+           ldap_port="389"
+           DnManager= "cn=Directory Manager"
+           passwordManager="secret"
+           ldap_branch_people="ou=mefi,o=gouv,c=fr"
+           session="memcached"
+          >
+	<handler 
+        	id="exemple" 
+        	Enabledproxy='0'
+	  	IpcNb ='0'
+	  	IpcKey='PR62'
+	  	AttrLDAP= 'mefiapplidgi'
+	  	CodeAppli='ADE'
+	  	Disabled ='0' 
+	  	BasePub ='http:/public.server.appli.dgi' 
+	  	BasePriv ='http://private.server.appli.dgi' 
+	  	Debug="1"
+          	StopCookie="0"
+          	Recursive="0"
+          	ProxyExt="http://mytoplevelproxy:3128"
+                    
+		>  
+	</handler>      
+</domain>
+<cache  id="CONF"
+	ConfigTtl ="1000"
+	>
+</cache>
+<session    id="memcached" 
+            SessionParams="( servers => ['10.ip.ip.ip:11211'] )" 
+        >
+</session>
+</lemonconfig>

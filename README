@@ -24,7 +24,7 @@ SYNOPSIS
 
  or by command line 
 
- perl -e "use Lemonldap::Config::Parameters;Parameters::f_delete('CONF');"
+ perl -e "use Lemonldap::Config::Parameters;Lemonldap::Config::Parameters::f_delete('CONF');"
   
 
 DESCRIPTION
@@ -35,7 +35,7 @@ Login page , handlers must retrieve their configs in an unique file eg :"applica
 This file has  a XML structrure . The parsing phase may be heavy . So lemonldap can cache the result of parsing in memory with IPC.
 For activing the cache you must have in the config :
 
- <cache type="IPC" name="CONF" ttl="1000"> 
+ <cache  id="CONF" ConfigTtl="1000"> 
  </cache>
 with :  name='CONF' it's the  GLUE value : four letters (see  IPC::Shareable documentation) .
         ttl: time to live in second   ( 0 for not reload ) 

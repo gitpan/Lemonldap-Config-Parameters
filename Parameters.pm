@@ -5,7 +5,7 @@ use IPC::Shareable;
 use XML::Simple;
 use Data::Dumper;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
@@ -98,6 +98,7 @@ tie %IPC_CONFIG,'IPC::Shareable',$arg ,
                        };
 ## lock
 (tied %IPC_CONFIG)->shlock;
+$IPC_CONFIG{ttl}='1' ;
 
 $IPC_CONFIG{AVAIABLE}='RELOAD' ;
 
@@ -125,14 +126,14 @@ my $self = shift;
 my ($par,$config);
 my $file= $self->{file};
 my $cache= $self->{cache} ;
- $config= XMLin($file,ForceArray=>1);
+$config= XMLin($file,ForceArray=>1);
 # I extract info about the cache ttl
 
 my $cache_param = $config->{cache};
 if ($cache_param->{$cache})  { # there are sereval cache descriptors 
-    $par= $cache_param->{$cache}{ttl}; }  else 
+    $par= $cache_param->{$cache}{ConfigTtl}; }  else 
     { # there  is a single descriptor  I must match the cache name.
-         $par= $cache_param->{ttl} if $cache_param->{name} eq $cache; }
+         $par= $cache_param->{ConfigTtl} if $cache_param->{id} eq $cache; }
 
 $self->{ttl}= $par||'0';
 $self->{config}= $config;
@@ -306,7 +307,7 @@ Lemonldap::Config::Parameters - Perl extension for lemonldap SSO system
 
  or by command line 
 
- perl -e "use Lemonldap::Config::Parameters;Parameters::f_delete('CONF');"
+ perl -e "use Lemonldap::Config::Parameters;Lemonldap::Config::Parameters::f_delete('CONF');"
   
 
 =head1 DESCRIPTION
@@ -317,7 +318,7 @@ Login page , handlers must retrieve their configs in an unique file eg :"applica
 This file has  a XML structrure . The parsing phase may be heavy . So lemonldap can cache the result of parsing in memory with IPC.
 For activing the cache you must have in the config :
 
- <cache type="IPC" name="CONF" ttl="1000"> 
+ <cache id="CONF" ConfigTtl="1000"> 
  </cache>
 with :  name='CONF' it's the  GLUE value : four letters (see  IPC::Shareable documentation) .
         ttl: time to live in second   ( 0 for not reload ) 

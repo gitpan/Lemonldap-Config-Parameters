@@ -1,9 +1,12 @@
 Changes
+eg/application_new.xml
 Makefile.PL
 MANIFEST
+META.yml			Module meta-data (added by MakeMaker)
 Parameters.pm
 README
+scripts/delete_cache.pl
+scripts/dump_cache.pl
+scripts/refresh_cache.pl
+scripts/valid.pl
 t/1.t
-examples/application_new.xml
-examples/accueil_new.pl
-META.yml                                Module meta-data (added by MakeMaker)

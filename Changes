@@ -3,4 +3,6 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
 0.01  Tue Dec  7 13:52:49 2004
 	- original version; created by h2xs 1.22 with options
 		-XAn Lemonldap::Config::Parameters
-
+0.02  Thu Feb  17   2005
+        - adapte ttl tag at xml model
+        - modify refres method o  
