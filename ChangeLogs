@@ -9,3 +9,7 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
 0.03  Mon Feb  21   2005
         - minors corrections 
         - source  more readable  with perltidy 
+0.04  Fri Mar  25   2005
+        - Refresh automatically call when file config XML is modified 
+        - Support SOAP protocol with a central server of configuration
+

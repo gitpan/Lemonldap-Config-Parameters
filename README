@@ -1,9 +1,10 @@
-Lemonldap/Config/Parameters version 0.03
-========================================
+NAME
+    Lemonldap::Config::Parameters - Backend of configuration for lemonldap
+    SSO system
+    SOAPserver.pm  - handler for mod_perl SOAP server
 
 SYNOPSIS
       #!/usr/bin/perl 
-      use strict;
       use Lemonldap::Config::Parameters;
       use Data::Dumper;
       my $nconfig= Lemonldap::Config::Parameters->new(
@@ -37,14 +38,17 @@ DESCRIPTION
     lemonldap can cache the result of parsing in memory with IPC. For
     activing the cache you must have in the config :
 
-     <cache id="CONF" ConfigTtl="1000"> 
-     </cache>
-    with :  name='CONF' it's the  GLUE value : four letters (see  IPC::Shareable
-    documentation).
-            ttl: time to live in second   ( 0 for not reload ) 
-     if ttl is too short the config file will be reload very offen .
-  
-     You can force the reload by command line  
+     <cache id="CONF" ConfigTtl="1000"
+                        LastModifed="1"> 
+     </cache> 
+ 
+    with : name='CONF' it's the GLUE value : four letters (see
+    IPC::Shareable documentation). Ttl: time to live in second ( 0 for not
+    reload ) if ttl is too short the config file will be reload very offen .
+
+            LastModified="1"  If true , you can force the reload  after anything modification on file  
+
+     You can force the reload off file by the command line bellow:
 
      perl -e "use Lemonldap::Config::Parameters;
      Lemonldap::Config::Parameters::f_reload('CONF');"
@@ -54,8 +58,8 @@ DESCRIPTION
      perl -e "use Lemonldap::Config::Parameters;
      Lemonldap::Config::Parameters::f_delete('CONF');"
 
-    or perl -e "use Lemonldap::Config::Parameters;
-    Parameters::f_reload('CONF');"
+    IMPORTANT : the user's ID who runs those scripts MUST be the same of the
+    IPC cache's owner !!
 
      WITHOUT CACHE SPECIFICATION , LEMONLDAP DOESN'T USE CACHE ! It  will read and
     parse config file each time.
@@ -84,20 +88,20 @@ METHODS
 
         my $cg = $nconfig->getDomain();
 
-     DB<2> x $cg
-      0  HASH(0x89b108c)
-       'DnManager' => 'cn=Directory Manager'
-       'branch_people' => 'ou=mefi,dc=foo,dc=bar'
-       'cookie' => '.foo.bar'
-       'ldap_port' => 389
-       'ldap_server' => 'cpldap.foo.bar'
-       'login' => 'http://cportail.foo.bar/portail/accueil.pl'
-       'menu' => 'http://cportail.foo.bar/portail/application.pl'
-       'passwordManager' => 'secret'
-       'path' => '/'
-       'session' => 'memcached'
-       'templates_dir' => '/opt/apache/portail/templates'
-       'templates_options' => 'ABSOLUTE => \'1\', INCLUDE_PATH => \'templates_dir\'
+      DB<2> x $cg
+       0  HASH(0x89b108c)
+        'DnManager' => 'cn=Directory Manager'
+        'branch_people' => 'ou=mefi,dc=foo,dc=bar'
+        'cookie' => '.foo.bar'
+        'ldap_port' => 389
+        'ldap_server' => 'cpldap.foo.bar'
+        'login' => 'http://cportail.foo.bar/portail/accueil.pl'
+        'menu' => 'http://cportail.foo.bar/portail/application.pl'
+        'passwordManager' => 'secret'
+        'path' => '/'
+        'session' => 'memcached'
+        'templates_dir' => '/opt/apache/portail/templates'
+        'templates_options' => 'ABSOLUTE => \'1\', INCLUDE_PATH => \'templates_dir\'
 
   ref_of_hash : formateLineHash(string:line);
          or  formateLineHash(string:line,string:motif,string:key);
@@ -141,28 +145,48 @@ Functions
   Lemonldap::Config::Parameters::f_dump('CONF');
      Dump of the config 
 
+SOAP server facility .
+     With version of Config::parameters > 0.3 we can use an unique file of configuration 
+     whi can be retrieve by the lemonldap SSO boxes with SOAP agents .
+     On the central server you MUST use SOAP server in combinaison with apache , mod_perl and SOAP::Lite 
+     Like this :
 
-INSTALLATION
+ (httpd.conf)  
+  <location /conf_lemonldap>
+    Options +execcgi
+    SetHandler perl-script
+    PerlHandler Apache::SOAP
+    PerlSetVar dispatch_to  'SOAPserver'
+  </location>
 
-To install this module type the following:
+Important : You MUST place SOAPserver.pm under the apache's directory :
+eg : /usr/local/apache/
+  
+ 
+     In XML file config :
+  
+       <cache  id="config1"
+            ConfigIpcKey="CONF"
+            ConfigTtl ="10000000"
+            LastModified='1'
+            Method="SOAP" 
+            SoapUri="http://www.portable.appli.cp/SOAPserver"
+            SoapProxy="http://www.portable.appli.cp/conf_lemonldap"
+            SoapAgent="['http://localhost/cgi-bin/refresh.cgi','http://www.portable.appli.cp/perl/refresh.cgi']"
+         >
 
-   perl Makefile.PL
-   make
-   make test
-   make install
+     with :SoapUri and SoapProxy : see SOAP::Lite documentation 
+           SoapAgent : the list of agents CGI  on lemonldap server who must to be call in the case of modification
 
-DEPENDENCIES
+      After that agent receive notification , they do a soap request upon the administration server  for reload the lastnew config .
+      If it's fail , slave lemonldap uses a local file XML which is the lastest copy of file config .
 
-Data::Dumper
-XML::Simple
-IPC::Shareable
-
-
-
-
+     An agent lemonldap MAY to be in same server that the SOAP manager. So SOAP manager uses 'conf' instead 'CONF' for the IPC glue .
+     It 'll be two IPC segments 'CONF' and 'conf'  'CONF' for agent 'conf' for SOAP server ,but don't worry it's an internal process ,
+     stay to use 'CONF' .
 
 SEE ALSO
-    Lemonldap(3), Lemonldap::Handler::Intrusion(3)
+    Lemonldap(3), Lemonldap::Portal::Standard
 
     http://lemonldap.sourceforge.net/
 
@@ -198,6 +222,4 @@ COPYRIGHT AND LICENSE
       A copy of the GNU General Public License is available in the source tree;
       if not, write to the Free Software Foundation, Inc.,
       59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-
-
 

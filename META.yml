@@ -1,12 +1,16 @@
+# http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Lemonldap-Config-Parameters
-version:      0.03
+version:      0.04
 version_from: Parameters.pm
 installdirs:  site
 requires:
     Data::Dumper:                  0
     IPC::Shareable:                0
+    LWP:                           O
+    SOAP::Lite:                    0
+    Storable:                      0
     XML::Simple:                   0
 
 distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.13
+generated_by: ExtUtils::MakeMaker version 6.17

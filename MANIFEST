@@ -1,12 +1,14 @@
-Changes
+ChangeLogs
 eg/application_new.xml
+Parameters.pm
 Makefile.PL
 MANIFEST
 META.yml			Module meta-data (added by MakeMaker)
-Parameters.pm
 README
 scripts/delete_cache.pl
 scripts/dump_cache.pl
+scripts/refresh.cgi
 scripts/refresh_cache.pl
+scripts/SOAPserver.pm
 scripts/valid.pl
 t/1.t

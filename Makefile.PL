@@ -7,9 +7,11 @@ WriteMakefile(
     PREREQ_PM         => { 
       IPC::Shareable =>'0',
       Data::Dumper =>'0',
-      XML::Simple => '0'
+      XML::Simple => '0',
+      SOAP::Lite => '0',
+      LWP        => 'O',
+      Storable => '0' ,
                }, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'Parameters.pm', # retrieve abstract from module
-       AUTHOR         => 'Eric German <germanlinux@yahoo.fr>') : ()),
+        (AUTHOR         => 'Eric German <germanlinux@yahoo.fr>') : ()),
 );

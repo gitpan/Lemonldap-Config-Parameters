@@ -4,8 +4,10 @@ use warnings;
 use IPC::Shareable;
 use XML::Simple;
 use Data::Dumper;
+use Storable qw (thaw);
+use LWP::UserAgent();
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
@@ -24,21 +26,39 @@ sub _getFromCache {
     unless ( keys(%IPC_CONFIG) ) {
 
         #first I read the xml file
-        $self->_readFile;
+               $self->_readFile;
         ## write cache
-        $self->_writeCache;
+               $self->_writeCache;
         $cog = $self->{config};
     }
     else {
 
-        # the cache exists but isn't good
-        $ttl               = $IPC_CONFIG{TTL};
-        $self->{ttl}       = $ttl;
-        $self->{available} = $IPC_CONFIG{AVAILABLE};
-        my %tmp = %IPC_CONFIG;
-        my $tmpvar  = $tmp{config};
-        my $it = eval $tmpvar;
+        $ttl                  = $IPC_CONFIG{TTL};
+        $self->{ttl}          = $ttl;
+        $self->{available}    = $IPC_CONFIG{AVAILABLE};
+        $self->{file}         = $IPC_CONFIG{FILE};
+        $self->{agent}        = $IPC_CONFIG{SOAPAGENT};
+        $self->{lastmodified} = $IPC_CONFIG{LASTMODIFIED};
+        $self->{method}       = $IPC_CONFIG{METHOD};
+        if ( $self->{method} ) {
+            unless ( $self->{i_am_soap_server} ) {
+                $self->{on_same} = $IPC_CONFIG{ON_SAME};
+            }
+
+            $self->{uri}   = $IPC_CONFIG{SOAPURI};
+            $self->{proxy} = $IPC_CONFIG{SOAPPROXY};
+        }
+        my %tmp    = %IPC_CONFIG;
+        my $tmpvar = $tmp{config};
+        my $it     = eval $tmpvar;
         $self->{config} = $it;
+        my $__modif__ = ( stat $self->{file} )[9];
+        if ( $__modif__ ne $self->{lastmodified} )
+        {    # the modified timestamp is different i'll force the  reload
+            $IPC_CONFIG{AVAILABLE} = 'RELOAD';
+            $self->{lastmodified} = $__modif__;
+        }
+
         if ( $IPC_CONFIG{AVAILABLE} eq 'RELOAD' ) {
             $self->_readFile;
             $self->_writeCache;
@@ -132,30 +152,101 @@ sub f_dump {
     return "OK\n";
 }
 
+sub _retrieve_on_soap {
+    my $self  = shift;
+    my $uri   = shift;
+    my $proxy = shift;
+    my $file  = $self->{file};
+    my $glue  = $self->{cache};
+    require SOAP::Lite;
+    my $s  = SOAP::Lite->uri($uri)->proxy($proxy);
+    my $hl = $s->SOAP::new(
+        file  => $file,
+        cache => $glue,
+    );
+
+    #my $res=$hl->SOAP::retrieve ;
+   print STDERR "Config::Parameters WARNING : SOAP server :$proxy don't answer\n"   unless $hl->{config}; 
+   return $hl->{config};
+}
+
 sub _readFile {
     my $self = shift;
-    my ( $par, $config );
-    my   $file   = $self->{file};
-    my  $cache  = $self->{cache};
-    $config = XMLin( $file, ForceArray => 1 );
+    my ( $uri,          $proxy, $obj );
+    my ( $lastmodified, $par,   $config );
+    my $file   = $self->{file};
+    my $cache  = $self->{cache};
+    $cache = uc $cache if ($self->{i_am_soap_server}); 
+    my $method = $self->{method};
+    unless ( $self->{i_am_soap_server} ) {
+
+        if ( $method eq 'SOAP' ) {
+            $uri   = $self->{uri};
+            $proxy = $self->{proxy};
+
+#unless ($self->{i_am_soap_server})   #the server soap objet must not make soap request on itself
+            my $conf_enc = $self->_retrieve_on_soap( $uri, $proxy );
+            my $conf_decode = thaw($conf_enc);
+            $self->{config} = $conf_decode;
+            $self->_writeCache;
+### now a rewrite or write my file on disk
+### the soap agent on  server must not write file too
+            return 1 if ( $self->{i_am_soap_server} );
+### the agent config in soap server must not write file
+            return 1 if ( $self->{on_same} );
+## last precaution
+            my $filelock = "$self->{file}.lock";
+            return 1 if ( -e $filelock );
+
+            my $xml = XMLout($conf_decode);
+            open CONFIG, ">$file" || die "@! $file \n";
+            flock( CONFIG, 2 );    # I lock file
+            print CONFIG $xml;
+            close(CONFIG);         # make the unlock
+            return 1;
+
+        }
+    }
+
+    $config = XMLin( $file, ForceArray => 1, );
 
     # I extract info about the cache ttl
 
     my $cache_param = $config->{cache};
-    if ( $cache_param->{$cache} ) {    # there are sereval cache descriptors
-        $par = $cache_param->{$cache}{ConfigTtl};
-    }
-    else {    # there  is a single descriptor  I must match the cache name.
-        $par = $cache_param->{ConfigTtl} if $cache_param->{id} eq $cache;
-    }
 
+    # there are sereval cache descriptors or one alone
+    #
+    my $__cache__;
+    foreach my $tmp ( keys %{$cache_param} )
+
+    {
+        if ( $cache_param->{$tmp}{'ConfigIpcKey'} eq $cache ) {
+            $__cache__ = $cache_param->{$tmp};
+        }
+
+    }
+    $par          = $__cache__->{ConfigTtl};
+    $lastmodified = $__cache__->{LastModified};
     $self->{ttl} = $par || '0';
+    $self->{method} = $__cache__->{Method};
+    if ( $self->{method} eq 'SOAP' ) {
+        $self->{uri}   = $__cache__->{SoapUri};
+        $self->{proxy} = $__cache__->{SoapProxy};
+        $self->{agent} = $__cache__->{SoapAgent};
+
+    }
+    if ( ( $self->{lastmodified} ) and not($lastmodified) ) {
+        $self->{lasmodified} = 0;
+    }
+    else {
+        $self->{lastmodified} = 1 unless $self->{lastmodified};
+    }
     $self->{config} = $config;
     1;
 }
 
 sub _deleteCache {
-    my $self = shift;
+    my $self  = shift;
     my $cache = $self->{cache};
 
     tie %IPC_CONFIG, 'IPC::Shareable', $cache, {
@@ -175,15 +266,30 @@ sub _deleteCache {
 }
 
 sub _writeCache {
-    my $self   = shift;
+    my $self = shift;
+
+#    unless ( $self->{i_am_soap_server} ) {
+#        return 1
+#          if ( $self->{on_same} )
+#          ;    ## the agent config in the soap server must not
+#        ## write in cache , there soap agent does this
+#        return 1
+#          if ( $IPC_CONFIG{ON_SAME} )
+#          ;    ## the soap agent may be already write in IPC
+#               #with me it's belt and straps of  trousers
+#        my $filelock = "$self->{file}.lock";
+#        return 1 if ( -e $filelock );
+#    }
+
     my $time   = time;
     my $cache  = $self->{cache};
     my $config = $self->{config};
     $Data::Dumper::Purity = 1;
     $Data::Dumper::Terse  = 1;
-    my $configs = Dumper($config);
-    my $ttl = $self->{ttl};
-
+    my $configs      = Dumper($config);
+    my $ttl          = $self->{ttl};
+    my $lastmodified = $self->{lastmodified};
+    my $file         = $self->{file};
     ( tied %IPC_CONFIG )->shlock;
     delete $IPC_CONFIG{config};
     %IPC_CONFIG = ();
@@ -191,14 +297,57 @@ sub _writeCache {
     ( tied %IPC_CONFIG )->shunlock;
     tie %IPC_CONFIG, 'IPC::Shareable', $cache, {
         create => 1,
-        mode   => 0660,
+        mode   => 0666,
 
         #   destroy => 1
     };
     ( tied %IPC_CONFIG )->shlock;
-    $IPC_CONFIG{config}    = $configs;
-    $IPC_CONFIG{TTL}       = $ttl;
-    $IPC_CONFIG{AVAILABLE} = $time;
+    $IPC_CONFIG{config}       = $configs;
+    $IPC_CONFIG{TTL}          = $ttl;
+    $IPC_CONFIG{AVAILABLE}    = $time;
+    $IPC_CONFIG{FILE}         = $file;
+    $IPC_CONFIG{SOAPAGENT}    = $self->{agent} if $self->{agent};
+    $IPC_CONFIG{LASTMODIFIED} = $lastmodified if $lastmodified;
+    $IPC_CONFIG{METHOD}    = $self->{method} if $self->{method};
+    $IPC_CONFIG{SOAPURI}   = $self->{uri} if $self->{uri};
+    $IPC_CONFIG{SOAPPROXY} = $self->{proxy} if $self->{proxy};    
+if ( $self->{method} ) {
+
+        if ( $self->{i_am_soap_server} )
+        {    # the soap server  tell that is it for an eventual
+                # agent config in the same machine
+                # I will create  a empty lock file for
+                # avoid recursive call between
+                # soap server and agent config
+
+            $file = "$self->{file}.lock";
+
+            open LOCK, ">$file";
+            close LOCK;
+            $IPC_CONFIG{ON_SAME} = 1;
+
+            #now i 'll notice at all agents the modification
+            my @soapagent;
+            my $sp ;
+             my $tt =  $self->{agent};
+             $sp =eval $tt;
+            @soapagent = @{$sp};
+             my $glue =uc ($self->{cache});
+             my $ua = LWP::UserAgent->new (timeout => 30);
+             for my $l (@soapagent) {
+#             my $req =HTTP::Request->new (GET => "$l?glue=$glue");    
+#             print STDERR $req->as_string; 
+	     my $res  =$ua->get ("$l?glue=$glue");
+              if ($res->is_error) {
+		  print STDERR  "WARNING Config::Parameters : error on  $l for SOAP service\n";
+              }
+              }
+              }
+
+    
+    }
+
+    #  unlock
 
     #  unlock
     ( tied %IPC_CONFIG )->shunlock;
@@ -214,8 +363,10 @@ sub new {
 
       },
       ref($class) || $class;
-    $self->{file}  = $conf{file}  if $conf{file};
-    $self->{cache} = $conf{cache} if $conf{cache};
+    $self->{file}             = $conf{file}   if $conf{file};
+    $self->{cache}            = $conf{cache}  if $conf{cache};
+    $self->{i_am_soap_server} = $conf{server} if $conf{server};
+    $self->{cache} = lc $self->{cache} if ($self->{i_am_soap_server});
     return $self;
 }
 
@@ -304,12 +455,11 @@ __END__
 
 =head1 NAME
 
-Lemonldap::Config::Parameters - Perl extension for lemonldap SSO system
+Lemonldap::Config::Parameters - Backend of configuration for lemonldap SSO system
 
 =head1 SYNOPSIS
 
   #!/usr/bin/perl 
-  use strict;
   use Lemonldap::Config::Parameters;
   use Data::Dumper;
   my $nconfig= Lemonldap::Config::Parameters->new(
@@ -345,14 +495,20 @@ This file has a XML structrure. The parsing phase may be heavy, so lemonldap
 can cache the result of parsing in memory with IPC. For activing the cache you
 must have in the config :
 
- <cache id="CONF" ConfigTtl="1000"> 
- </cache>
+ <cache id="CONF" ConfigTtl="1000"
+                    LastModifed="1"> 
+ </cache> 
+ 
 with :  name='CONF' it's the  GLUE value : four letters (see  IPC::Shareable
 documentation).
-        ttl: time to live in second   ( 0 for not reload ) 
+        Ttl: time to live in second   ( 0 for not reload ) 
  if ttl is too short the config file will be reload very offen .
-  
- You can force the reload by command line  
+   
+        LastModified="1"  If true , you can force the reload  after anything modification on file  
+
+ You can force the reload off file by the command line bellow:
+
+
 
  perl -e "use Lemonldap::Config::Parameters;
  Lemonldap::Config::Parameters::f_reload('CONF');"
@@ -362,7 +518,8 @@ documentation).
  perl -e "use Lemonldap::Config::Parameters;
  Lemonldap::Config::Parameters::f_delete('CONF');"
 
-or  perl -e "use Lemonldap::Config::Parameters; Parameters::f_reload('CONF');"
+IMPORTANT : the user's ID who runs those scripts MUST be the same of the IPC cache's owner !! 
+
 
  WITHOUT CACHE SPECIFICATION , LEMONLDAP DOESN'T USE CACHE ! It  will read and
 parse config file each time.
@@ -392,7 +549,7 @@ eg :
            path ="/" 
            templates_dir="/opt/apache/portail/templates"
            templates_options =  "ABSOLUTE     => '1', INCLUDE_PATH =>
-'templates_dir'"
+ 'templates_dir'"
            login ="http://cportail.foo.bar/portail/accueil.pl"
            menu= "http://cportail.foo.bar/portail/application.pl"   
            ldap_server ="cpldap.foo.bar"
@@ -406,20 +563,20 @@ eg :
 
     my $cg = $nconfig->getDomain();
 
- DB<2> x $cg
-  0  HASH(0x89b108c)
-   'DnManager' => 'cn=Directory Manager'
-   'branch_people' => 'ou=mefi,dc=foo,dc=bar'
-   'cookie' => '.foo.bar'
-   'ldap_port' => 389
-   'ldap_server' => 'cpldap.foo.bar'
-   'login' => 'http://cportail.foo.bar/portail/accueil.pl'
-   'menu' => 'http://cportail.foo.bar/portail/application.pl'
-   'passwordManager' => 'secret'
-   'path' => '/'
-   'session' => 'memcached'
-   'templates_dir' => '/opt/apache/portail/templates'
-   'templates_options' => 'ABSOLUTE => \'1\', INCLUDE_PATH => \'templates_dir\'
+  DB<2> x $cg
+   0  HASH(0x89b108c)
+    'DnManager' => 'cn=Directory Manager'
+    'branch_people' => 'ou=mefi,dc=foo,dc=bar'
+    'cookie' => '.foo.bar'
+    'ldap_port' => 389
+    'ldap_server' => 'cpldap.foo.bar'
+    'login' => 'http://cportail.foo.bar/portail/accueil.pl'
+    'menu' => 'http://cportail.foo.bar/portail/application.pl'
+    'passwordManager' => 'secret'
+    'path' => '/'
+    'session' => 'memcached'
+    'templates_dir' => '/opt/apache/portail/templates'
+    'templates_options' => 'ABSOLUTE => \'1\', INCLUDE_PATH => \'templates_dir\'
 
 =head2  ref_of_hash : formateLineHash(string:line);
 
@@ -470,9 +627,50 @@ specified.
 
  Dump of the config 
 
+=head1 SOAP server facility .
+ 
+ With version of Config::parameters > 0.3 we can use an unique file of configuration 
+ whi can be retrieve by the lemonldap SSO boxes with SOAP agents .
+ On the central server you MUST use SOAP server in combinaison with apache , mod_perl and SOAP::Lite 
+ Like this :
+ (httpd.conf)  
+  <location /conf_lemonldap>
+    Options +execcgi
+    SetHandler perl-script
+    PerlHandler Apache::SOAP
+    PerlSetVar dispatch_to  'SOAPserver'
+  </location>
+
+Important : You MUST place SOAPserver.pm under the apache's directory :
+eg : /usr/local/apache/
+  
+ 
+ In XML file config :
+  
+   <cache  id="config1"
+        ConfigIpcKey="CONF"
+        ConfigTtl ="10000000"
+        LastModified='1'
+        Method="SOAP" 
+        SoapUri="http://www.portable.appli.cp/SOAPserver"
+        SoapProxy="http://www.portable.appli.cp/conf_lemonldap"
+        SoapAgent="['http://localhost/cgi-bin/refresh.cgi','http://www.portable.appli.cp/perl/refresh.cgi']"
+     >
+
+ with :SoapUri and SoapProxy : see SOAP::Lite documentation 
+       SoapAgent : the list of agents CGI  on lemonldap server who must to be call in the case of modification
+
+  After that agent receive notification , they do a soap request upon the administration server  for reload the lastnew config .
+  If it's fail , slave lemonldap uses a local file XML which is the lastest copy of file config .
+
+ An agent lemonldap MAY to be in same server that the SOAP manager. So SOAP manager uses 'conf' instead 'CONF' for the IPC glue .
+ It 'll be two IPC segments 'CONF' and 'conf'  'CONF' for agent 'conf' for SOAP server ,but don't worry it's an internal process ,
+ stay to use 'CONF' .
+
+
 =head1 SEE ALSO
 
-Lemonldap(3), Lemonldap::Handler::Intrusion(3)
+Lemonldap(3), Lemonldap::Portal::Standard
 
 http://lemonldap.sourceforge.net/
 
