@@ -1,0 +1,12 @@
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         Lemonldap-Config-Parameters
+version:      0.01
+version_from: Parameters.pm
+installdirs:  site
+requires:
+    Data::Dumper:                  0
+    IPC::Shareable:                0
+    XML::Simple:                   0
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.13

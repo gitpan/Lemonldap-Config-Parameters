@@ -1,0 +1,9 @@
+Changes
+Makefile.PL
+MANIFEST
+Parameters.pm
+README
+t/1.t
+examples/application_new.xml
+examples/accueil_new.pl
+META.yml                                Module meta-data (added by MakeMaker)
