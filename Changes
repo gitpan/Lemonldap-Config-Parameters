@@ -13,3 +13,8 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
         - Refresh automatically call when file config XML is modified 
         - Support SOAP protocol with a central server of configuration
 
+0.05  Mon May  23   2005
+        - copy keys in Camelcase in lowercase 
+        - add feather for dump function
+        - add delete_ipc.pl in scripts directory
+

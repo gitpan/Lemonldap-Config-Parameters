@@ -7,10 +7,29 @@ use Data::Dumper;
 use Storable qw (thaw);
 use LWP::UserAgent();
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
+sub Minus {
+	## this function convert all key in caMel case into lowercase
+	##  it is a recursive function
+	## it keeps all the old keys
+	my $rh =shift;
+foreach (keys %{$rh}) {
+	my $k =$_;
+	if ($k ne lc ($k)) {
+	       $rh->{lc($k)} = $rh->{$k} ;
+       }
+if (ref  $rh->{$k}) {
+ Minus ($rh->{$k});
+}
+}
+return ;
+}
+	
+
+
 sub _getFromCache {
 
     my $self  = shift;
@@ -146,6 +165,20 @@ sub f_dump {
         # destroy => 1
     };
     $Data::Dumper::Indent = 1;
+    $Data::Dumper::Terse = 1;
+if ($IPC_CONFIG{'QUEUE'}) {  #it's ipc segment for handler cache level 2
+my $tmpvar = $IPC_CONFIG{'QUEUE'};
+my @tmp ;
+if ($tmpvar) {
+	@tmp= split /#/,$tmpvar ;
+}
+print "Queue : $#tmp\n";
+foreach (@tmp) {
+	print "=> $_\n";
+}
+print "\n";
+
+}	
     my $ligne = Dumper( \%IPC_CONFIG );
     print "$ligne\n";
 
@@ -241,6 +274,10 @@ sub _readFile {
     else {
         $self->{lastmodified} = 1 unless $self->{lastmodified};
     }
+    ## call Minus function for lowering case
+    Minus($config) ;
+     
+   
     $self->{config} = $config;
     1;
 }

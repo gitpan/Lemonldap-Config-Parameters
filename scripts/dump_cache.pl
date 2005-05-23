@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
 use Lemonldap::Config::Parameters;
-Lemonldap::Config::Parameters::f_dump('CONF');
+my $key=shift||'CONF';
+Lemonldap::Config::Parameters::f_dump($key);
 

@@ -1,4 +1,4 @@
-ChangeLogs
+Changes
 eg/application_new.xml
 Parameters.pm
 Makefile.PL
@@ -11,4 +11,5 @@ scripts/refresh.cgi
 scripts/refresh_cache.pl
 scripts/SOAPserver.pm
 scripts/valid.pl
+scripts/delete_ipc.pl
 t/1.t
