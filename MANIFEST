@@ -13,3 +13,5 @@ scripts/SOAPserver.pm
 scripts/valid.pl
 scripts/delete_ipc.pl
 t/1.t
+t/config-parameters.t
+t/configuration.xml

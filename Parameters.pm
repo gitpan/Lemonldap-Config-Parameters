@@ -7,7 +7,7 @@ use Data::Dumper;
 use Storable qw (thaw);
 use LWP::UserAgent();
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
@@ -481,8 +481,15 @@ sub getAllConfig {
 
     }
     else {                     # cache forbidden
-        $config = XMLin($file);
+       
+    $config = XMLin( $file, ForceArray => 1, );
 
+    Minus($config) ;
+    }
+   unless ($config) {  #at the first time  
+    $config = XMLin( $file, ForceArray => 1, );
+
+    Minus($config) ;
     }
     return $config;
 }

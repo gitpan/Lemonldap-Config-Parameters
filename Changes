@@ -18,3 +18,6 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
         - add feather for dump function
         - add delete_ipc.pl in scripts directory
 
+0.06  Thu Jun 09 2005
+        - correct some bugs in no_cache option
+        - add test config install 
