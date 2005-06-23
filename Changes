@@ -21,3 +21,6 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
 0.06  Thu Jun 09 2005
         - correct some bugs in no_cache option
         - add test config install 
+
+0.07  Thu Jun 23 2005
+        - use BerkelyDB  instead IPC

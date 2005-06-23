@@ -5,7 +5,7 @@ WriteMakefile(
     NAME              => 'Lemonldap::Config::Parameters',
     VERSION_FROM      => 'Parameters.pm', # finds $VERSION
     PREREQ_PM         => { 
-      IPC::Shareable =>'0',
+      BerkeleyDB  =>'0',
       Data::Dumper =>'0',
       XML::Simple => '0',
       SOAP::Lite => '0',

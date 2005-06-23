@@ -1,13 +1,14 @@
 package Lemonldap::Config::Parameters;
 use strict;
 use warnings;
-use IPC::Shareable;
+#use IPC::Shareable;
+use BerkeleyDB;
 use XML::Simple;
 use Data::Dumper;
 use Storable qw (thaw);
 use LWP::UserAgent();
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
@@ -36,12 +37,10 @@ sub _getFromCache {
     my $cache = $self->{cache};
     my $cog;
     my $ttl;
-    tie %IPC_CONFIG, 'IPC::Shareable', $cache, {
-        create => 1,
-        mode   => 0666,
-
-        #  destroy => 1
-    };
+ 
+             tie %IPC_CONFIG, 'BerkeleyDB::Btree',
+                          -Filename => $cache ,
+                          -Flags => DB_CREATE ;
     unless ( keys(%IPC_CONFIG) ) {
 
         #first I read the xml file
@@ -117,53 +116,31 @@ sub destroy {
 #   function used to manage cache conf from command line
 sub f_delete {
     my $arg = shift;
-    tie %IPC_CONFIG, 'IPC::Shareable', $arg, {
-        create => 1,
-        mode   => 0666,
-
-        # destroy => 1
-    };
-
-    # lock
-    ( tied %IPC_CONFIG )->shlock;
-
-    tied(%IPC_CONFIG)->remove;
-
-    # unlock
-    ( tied %IPC_CONFIG )->shunlock;
-
+    unlink ($arg); 
     return (0);
 }
 
 sub f_reload {
     my $arg = shift;
-    tie %IPC_CONFIG, 'IPC::Shareable', $arg, {
-        create => 1,
-        mode   => 0666,
 
-        # destroy => 1
-    };
-
-    # lock
-    ( tied %IPC_CONFIG )->shlock;
+     tie %IPC_CONFIG, 'BerkeleyDB::Btree',
+                                       -Filename => $arg ,
+                                       -Flags => DB_CREATE ;
+   
     $IPC_CONFIG{ttl} = '1';
 
     $IPC_CONFIG{AVAILABLE} = 'RELOAD';
 
-    # unlock
-    ( tied %IPC_CONFIG )->shunlock;
-
+    untie %IPC_CONFIG ;
     return (0);
 }
 
 sub f_dump {
     my $arg = shift;
-    tie %IPC_CONFIG, 'IPC::Shareable', $arg, {
-        create => 1,
-        mode   => 0666,
-
-        # destroy => 1
-    };
+   tie %IPC_CONFIG, 'BerkeleyDB::Btree',
+                                       -Filename => $arg ,
+                                       -Flags => DB_CREATE ;
+ 
     $Data::Dumper::Indent = 1;
     $Data::Dumper::Terse = 1;
 if ($IPC_CONFIG{'QUEUE'}) {  #it's ipc segment for handler cache level 2
@@ -182,6 +159,7 @@ print "\n";
     my $ligne = Dumper( \%IPC_CONFIG );
     print "$ligne\n";
 
+untie %IPC_CONFIG;
     return "OK\n";
 }
 
@@ -285,21 +263,12 @@ sub _readFile {
 sub _deleteCache {
     my $self  = shift;
     my $cache = $self->{cache};
-
-    tie %IPC_CONFIG, 'IPC::Shareable', $cache, {
-        create => 1,
-        mode   => 0666,
-
-        # destroy => 1
-    };
-
-    # lock
-    ( tied %IPC_CONFIG )->shlock;
-
-    tied(%IPC_CONFIG)->remove;
-
-    # unlock
-    ( tied %IPC_CONFIG )->shunlock;
+    
+   tie %IPC_CONFIG, 'BerkeleyDB::Btree',
+                               -Filename => $cache ,
+                               -Flags => DB_CREATE ;
+  %IPC_CONFIG ='';
+  untie %IPC_CONFIG;
 }
 
 sub _writeCache {
@@ -327,18 +296,12 @@ sub _writeCache {
     my $ttl          = $self->{ttl};
     my $lastmodified = $self->{lastmodified};
     my $file         = $self->{file};
-    ( tied %IPC_CONFIG )->shlock;
     delete $IPC_CONFIG{config};
     %IPC_CONFIG = ();
-    ( tied %IPC_CONFIG )->remove;
-    ( tied %IPC_CONFIG )->shunlock;
-    tie %IPC_CONFIG, 'IPC::Shareable', $cache, {
-        create => 1,
-        mode   => 0666,
-
-        #   destroy => 1
-    };
-    ( tied %IPC_CONFIG )->shlock;
+   untie %IPC_CONFIG;
+     tie %IPC_CONFIG, 'BerkeleyDB::Btree',
+                            -Filename => $cache ,
+                            -Flags => DB_CREATE ;
     $IPC_CONFIG{config}       = $configs;
     $IPC_CONFIG{TTL}          = $ttl;
     $IPC_CONFIG{AVAILABLE}    = $time;
@@ -383,11 +346,6 @@ if ( $self->{method} ) {
 
     
     }
-
-    #  unlock
-
-    #  unlock
-    ( tied %IPC_CONFIG )->shunlock;
 
     return 1;
 }
