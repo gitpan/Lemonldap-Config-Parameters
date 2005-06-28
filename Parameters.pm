@@ -8,7 +8,7 @@ use Data::Dumper;
 use Storable qw (thaw);
 use LWP::UserAgent();
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
@@ -19,6 +19,7 @@ sub Minus {
 	my $rh =shift;
 foreach (keys %{$rh}) {
 	my $k =$_;
+        return unless $k;
 	if ($k ne lc ($k)) {
 	       $rh->{lc($k)} = $rh->{$k} ;
        }
@@ -68,7 +69,8 @@ sub _getFromCache {
         }
         my %tmp    = %IPC_CONFIG;
         my $tmpvar = $tmp{config};
-        my $it     = eval $tmpvar;
+       my $it;
+       	$it     = eval $tmpvar if $tmpvar;
         $self->{config} = $it;
         my $__modif__ = ( stat $self->{file} )[9];
         if ( $__modif__ ne $self->{lastmodified} )
@@ -188,7 +190,7 @@ sub _readFile {
     my $file   = $self->{file};
     my $cache  = $self->{cache};
     $cache = uc $cache if ($self->{i_am_soap_server}); 
-    my $method = $self->{method};
+    my $method = $self->{method}||'NONE';
     unless ( $self->{i_am_soap_server} ) {
 
         if ( $method eq 'SOAP' ) {
@@ -239,7 +241,7 @@ sub _readFile {
     $par          = $__cache__->{ConfigTtl};
     $lastmodified = $__cache__->{LastModified};
     $self->{ttl} = $par || '0';
-    $self->{method} = $__cache__->{Method};
+    $self->{method} = $__cache__->{Method}||'NONE';
     if ( $self->{method} eq 'SOAP' ) {
         $self->{uri}   = $__cache__->{SoapUri};
         $self->{proxy} = $__cache__->{SoapProxy};
@@ -297,8 +299,9 @@ sub _writeCache {
     my $lastmodified = $self->{lastmodified};
     my $file         = $self->{file};
     delete $IPC_CONFIG{config};
-    %IPC_CONFIG = ();
-   untie %IPC_CONFIG;
+#    %IPC_CONFIG = '';
+    untie %IPC_CONFIG;
+unlink ($self->{cache});
      tie %IPC_CONFIG, 'BerkeleyDB::Btree',
                             -Filename => $cache ,
                             -Flags => DB_CREATE ;
