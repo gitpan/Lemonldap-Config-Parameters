@@ -2,6 +2,7 @@ Changes
 eg/application_new.xml
 Parameters.pm
 Makefile.PL
+Initparam.pm
 MANIFEST
 META.yml			Module meta-data (added by MakeMaker)
 README

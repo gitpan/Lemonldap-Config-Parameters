@@ -24,3 +24,5 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
 
 0.07  Thu Jun 23 2005
         - use BerkelyDB  instead IPC
+1.00  Fri JUL 08 2005
+        - add Initparam lib
