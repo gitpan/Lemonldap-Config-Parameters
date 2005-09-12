@@ -2,7 +2,7 @@ package Lemonldap::Config::Initparam;
 use Apache::Table;
 use Lemonldap::Config::Parameters;
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 ##########################
 ##########################
@@ -61,7 +61,7 @@ e \n"; }
 #    $debug = Dumper (%__config );
 #    print STDERR  "config $debug\n";
 ## work is done tel this 
-$__config{'OK'} =1;
+#$__config{'OK'} =1;
 
 return (\%__config );
 
