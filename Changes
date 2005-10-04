@@ -28,3 +28,6 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
         - add Initparam lib
 1.01  Thu Sep 08 2005
         - correct bug for apache2 context management 
+1.02  Thu Sep 30 2005
+        - correct bug : call Dumper 
+        - accept lower or upper case  in xml
