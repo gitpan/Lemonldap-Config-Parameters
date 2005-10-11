@@ -2,7 +2,7 @@ package Lemonldap::Config::Initparam;
 use Apache::Table;
 use Lemonldap::Config::Parameters;
 
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 ##########################
 ##########################
@@ -119,7 +119,7 @@ my $tmpconf;
        $tmpconf = $GENERAL->{handler}->{$CONFIG{ID_HANDLER}};
  foreach (keys %$__param )  {
 my $key = $__param->{$_};
- $__config{$key} = lc($GENERAL->{$_}) if defined ($GENERAL->{$_}) ;
+ $__config{$key} = $GENERAL->{lc($_)} if defined ($GENERAL->{lc($_)}) ;
  } 
      
                 }  else                 {
@@ -135,7 +135,7 @@ $__config{SERVERS} = $CONF->formateLineHash ($xmlsession->{SessionParams});
 
  foreach (keys %$__param_loc )  {
 my $key = $__param_loc->{$_};
- $__config{$key} = lc($tmpconf->{$_}) if defined ($tmpconf->{$_}) ;
+ $__config{$key} = $tmpconf->{lc($_)} if defined ($tmpconf->{lc($_)}) ;
  } 
 $__config{'OK'} =1;
 $__config{'message '} =$message;
@@ -152,7 +152,7 @@ my %__tmp;
  foreach (keys %$__param_loc )  {
 
 my $key = $__param_loc->{$_};
- $__tmp{$key} = $clmh->{$_} if defined ($clmh->{$_}) ;
+ $__tmp{$key} = $clmh->{lc($_)} if defined ($clmh->{lc($_)}) ;
  } 
 $__tmp{HANDLER} =$_;
 $__HASHMH{$_} = \%__tmp;
