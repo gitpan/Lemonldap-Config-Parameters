@@ -2,7 +2,7 @@ package Lemonldap::Config::Initparam;
 use Apache::Table;
 use Lemonldap::Config::Parameters;
 
-our $VERSION = '1.03';
+our $VERSION = '2.00';
 
 ##########################
 ##########################
@@ -25,10 +25,10 @@ sub init_param_httpd {
 	'lemonldapconfigdbpath' => 'GLUE',
 	'lemonldapenabledproxy' => 'PROXY',
 	'lemonldapproxyphase' => 'PROXY',
-	'lemonldapipckey' => 'KEYIPC',
-	'lemonldapdbpath' => 'KEYIPC',
-	'lemonldapcache2' => 'IPCNB',
-	'lemonldapipcnb'  => 'IPCNB',
+#	'lemonldapipckey' => 'KEYIPC',
+	'lemonldappathdb' => 'PATHDB',
+#	'lemonldapcache2' => 'IPCNB',
+#	'lemonldapipcnb'  => 'IPCNB',
         'lemonldapattrldap' => 'ATTRLDAP',
         'lemonldapmajeur' => 'ATTRLDAP',
         'lemonldapcodeappli' => 'LDAPCONTROL',
@@ -40,7 +40,21 @@ sub init_param_httpd {
         'lemonldapproxyext' => 'PROXYEXT',
         'lemonldapics' => 'ICS',
         'lemonldapmultihoming' => 'MULTIHOMING',
-
+        'lemonldaplwptimeout' => 'LWPTIMEOUT',
+        'lemonldapsoftcontrol' =>'SOFTCONTROL', 
+        'lemonldapheader' =>'HEADER', 
+        'lemonldapallow' =>'ALLOW', 
+        'lemonldappluginpolicy' =>'PLUGINPOLICY', 
+	'lemonldappluginhtml' =>'PLUGINHTML', 
+        'lemonldappluginheader' =>'PLUGINHEADER',
+        'lemonldappluginbackend' =>'PLUGINBACKEND',
+         'lemonldphttps' =>'HTTPS' ,
+        'lemonldapauth' => 'AUTH',
+        'lemonldappkcs12' => 'PKCS12',
+        'lemonldappkcs12_pwd' => 'PKCS12_PWD',
+        'lemonldapcert_file' => 'CERT_FILE' ,
+        'lemonldapkey_file'  => 'KEY_FILE',    
+       
 };
 # input
 foreach (keys %$__c) {
@@ -61,7 +75,7 @@ e \n"; }
 #    $debug = Dumper (%__config );
 #    print STDERR  "config $debug\n";
 ## work is done tel this 
-#$__config{'OK'} =1;
+$__config{'HTTPD'} =1;
 
 return (\%__config );
 
@@ -81,12 +95,31 @@ my $tmpconf;
     my $__param  = {
      'Cookie' => 'COOKIE' ,
      'Portal' => 'PORTAL',
-     'Session' => 'CACHE'  
-  };
+     'Session' => 'CACHE',  
+     'IpcKey' => 'KEYIPC',
+#     'IpcNb' => 'IPCNB' ,
+#     'DbPath' => 'KEYIPC',
+     'SoftControl' =>'SOFTCONTROL', 
+#	'DbPath' => 'DBPATH',
+	'Cache2' => 'IPCNB',
+        'LWPTimeout' =>'LWPTIMEOUT',
+        'Header' => 'HEADER' ,       
+        'Allow' =>'ALLOW',
+        'PlugInPolicy' =>'PLUGINPOLICY', 
+        'PlugInHtml' =>'PLUGINHTML', 
+        'PlugInBackend' =>'PLUGINBACKED',
+        'PlugInHeader' =>'PLUGINHEADER',
+        'HTTPS' =>'HTTPS' ,
+        'AUTH' => 'AUTH',
+        'PKCS12' => 'PKCS12',
+        'PKCS12_PWD' => 'PKCS12_PWD',
+        'CERT_FILE' => 'CERT_FILE' ,
+        'KEY_FILE'  => 'KEY_FILE',
+};
   my $__param_loc  = {
      'Enabledproxy' => 'PROXY' ,
-     'IpcKey' => 'KEYIPC',
-     'IpcNb' => 'IPCNB' ,
+ #    'IpcKey' => 'KEYIPC',
+ #    'IpcNb' => 'IPCNB' ,
      'AttrLdap' =>'ATTRLDAP',
      'CodeAppli' => 'LDAPCONTROL',
      'Disabled' => 'DISABLEDCONTROL' ,
@@ -96,17 +129,31 @@ my $tmpconf;
      'Recursive' => 'RECURSIF' ,
      'Portal' =>     'PORTAL',      
      'Proxyphase' => 'PROXY',
-	'DbPath' => 'KEYIPC',
-	'Cache2' => 'IPCNB',
+#	'DbPath' => 'KEYIPC',
+#	'DbPath' => 'DBPATH',
+#	'Cache2' => 'IPCNB',
         'Majeur' => 'ATTRLDAP',
         'Mineur' => 'LDAPCONTROL',
         'Ics' => 'ICS',
         'MultiHoming' => 'MULTIHOMING',
         'MotifIn' =>'MOTIFIN',
         'MotifOut' => 'MOTIFOUT', 
- 
+        'LWPTimeout' => 'LWPTIMEOUT',
+        'SoftControl' =>'SOFTCONTROL', 
+        'Header' => 'HEADER',        
+        'Allow' =>'ALLOW',
+        'PlugInPolicy' =>'PLUGINPOLICY', 
+        'PlugInHtml' =>'PLUGINHTML', 
+        'PlugInBackend' =>'PLUGINBACKED',
+        'PlugInHeader' =>'PLUGINHEADER',
+        'HTTPS' =>'HTTPS' ,
+        'AUTH' => 'AUTH',
+        'PKCS12' => 'PKCS12',
+        'PKCS12_PWD' => 'PKCS12_PWD',
+        'CERT_FILE' => 'CERT_FILE' ,
+        'KEY_FILE'  => 'KEY_FILE',
 };
- my $CONF= Lemonldap::Config::Parameters->new (
+ my $CONF= Lemonldap::Config::ParametersV2->new (
                         file => $CONFIG{FILE} ,
 		       	cache => $CONFIG{GLUE} );
     if ($CONF) {
@@ -135,7 +182,9 @@ $__config{SERVERS} = $CONF->formateLineHash ($xmlsession->{SessionParams});
 
  foreach (keys %$__param_loc )  {
 my $key = $__param_loc->{$_};
+# $__config{$key} = lc($tmpconf->{$_}) if defined ($tmpconf->{$_}) ;
  $__config{$key} = $tmpconf->{lc($_)} if defined ($tmpconf->{lc($_)}) ;
+
  } 
 $__config{'OK'} =1;
 $__config{'message '} =$message;
@@ -152,8 +201,10 @@ my %__tmp;
  foreach (keys %$__param_loc )  {
 
 my $key = $__param_loc->{$_};
+# $__tmp{$key} = $clmh->{$_} if defined ($clmh->{$_}) ;
  $__tmp{$key} = $clmh->{lc($_)} if defined ($clmh->{lc($_)}) ;
- } 
+ 
+} 
 $__tmp{HANDLER} =$_;
 $__HASHMH{$_} = \%__tmp;
 ## call function builer
@@ -167,7 +218,7 @@ $__config{MH} =\%__HASHMH;
 }
  
 
-
+$__config{XML}=1;
 return (\%__config);
 }
 
@@ -179,11 +230,20 @@ sub built_function    {
     my $tablemh= shift;
 
     my @key = keys %$tablemh ;
+    my $def;
 my $code = "sub {local \$_ = shift;\n"; 
+
 foreach (@key) {
     my $tmp = $tablemh->{$_};
+      if ($tmp->{HANDLER} =~ /DEFAULT/i)  {
+     $def= 'DEFAULT';
+    next ;
+ }
+
 $code .= "return \"$tmp->{HANDLER}\"  if /^\\$tmp->{MOTIFIN}/i;\n";  
 }
+    $code.= "return \"DEFAULT\";\n" if $def;
+
 $code.= "1;}\n";
 return $code;
 }
@@ -235,6 +295,7 @@ $__config{$_} = $tmp{$_} ;
 } 
 my $id =$__config{ID_HANDLER}."/".$mh ;
 $__config{ID_HANDLER} = $id;
+$__config{XML}=1;
 return (\%__config);
 
 }

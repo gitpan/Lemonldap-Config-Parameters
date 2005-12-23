@@ -1,18 +1,7 @@
 Changes
-eg/application_new.xml
-Parameters.pm
 Makefile.PL
-Initparam.pm
 MANIFEST
-META.yml			Module meta-data (added by MakeMaker)
 README
-scripts/delete_cache.pl
-scripts/dump_cache.pl
-scripts/refresh.cgi
-scripts/refresh_cache.pl
-scripts/SOAPserver.pm
-scripts/valid.pl
-scripts/delete_ipc.pl
-t/1.t
-t/config-parameters.t
-t/configuration.xml
+lib/Lemonldap/Config/Initparam.pm
+lib/Lemonldap/Config/Parameters.pm
+META.yml                                 Module meta-data (added by MakeMaker)

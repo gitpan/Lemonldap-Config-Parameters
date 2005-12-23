@@ -1,7 +1,20 @@
+Lemonldap-Config-Parameters version 2.00
+========================================
+
 NAME
     Lemonldap::Config::Parameters - Backend of configuration for lemonldap
     SSO system
-    SOAPserver.pm  - handler for mod_perl SOAP server
+
+
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make install
+
 
 SYNOPSIS
       #!/usr/bin/perl 
@@ -150,19 +163,17 @@ SOAP server facility .
      whi can be retrieve by the lemonldap SSO boxes with SOAP agents .
      On the central server you MUST use SOAP server in combinaison with apache , mod_perl and SOAP::Lite 
      Like this :
+     (httpd.conf)  
+      <location /conf_lemonldap>
+        Options +execcgi
+        SetHandler perl-script
+        PerlHandler Apache::SOAP
+        PerlSetVar dispatch_to  'SOAPserver'
+      </location>
 
- (httpd.conf)  
-  <location /conf_lemonldap>
-    Options +execcgi
-    SetHandler perl-script
-    PerlHandler Apache::SOAP
-    PerlSetVar dispatch_to  'SOAPserver'
-  </location>
+    Important : You MUST place SOAPserver.pm under the apache's directory :
+    eg : /usr/local/apache/
 
-Important : You MUST place SOAPserver.pm under the apache's directory :
-eg : /usr/local/apache/
-  
- 
      In XML file config :
   
        <cache  id="config1"
@@ -222,4 +233,6 @@ COPYRIGHT AND LICENSE
       A copy of the GNU General Public License is available in the source tree;
       if not, write to the Free Software Foundation, Inc.,
       59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+
 

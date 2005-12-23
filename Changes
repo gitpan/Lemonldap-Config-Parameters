@@ -1,33 +1,6 @@
 Revision history for Perl extension Lemonldap::Config::Parameters.
 
-0.01  Tue Dec  7 13:52:49 2004
-	- original version; created by h2xs 1.22 with options
+2.0.0  Fri Oct  7 14:19:09 2005
+	- original version; created by h2xs 1.23 with options
 		-XAn Lemonldap::Config::Parameters
-0.02  Thu Feb  17   2005
-        - adapte ttl tag at xml model
-        - modify refres method o  
-0.03  Mon Feb  21   2005
-        - minors corrections 
-        - source  more readable  with perltidy 
-0.04  Fri Mar  25   2005
-        - Refresh automatically call when file config XML is modified 
-        - Support SOAP protocol with a central server of configuration
 
-0.05  Mon May  23   2005
-        - copy keys in Camelcase in lowercase 
-        - add feather for dump function
-        - add delete_ipc.pl in scripts directory
-
-0.06  Thu Jun 09 2005
-        - correct some bugs in no_cache option
-        - add test config install 
-
-0.07  Thu Jun 23 2005
-        - use BerkelyDB  instead IPC
-1.00  Fri JUL 08 2005
-        - add Initparam lib
-1.01  Thu Sep 08 2005
-        - correct bug for apache2 context management 
-1.02  Thu Sep 30 2005
-        - correct bug : call Dumper 
-        - accept lower or upper case  in xml
