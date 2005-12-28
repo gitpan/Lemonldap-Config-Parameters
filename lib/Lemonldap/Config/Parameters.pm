@@ -1,6 +1,6 @@
 package Lemonldap::Config::Parameters;
 use strict;
-use warnings;
+#use warnings;
 #use IPC::Shareable;
 use BerkeleyDB;
 use XML::Simple;
@@ -8,7 +8,7 @@ use Data::Dumper;
 use Storable qw (thaw);
 use LWP::UserAgent();
 
-our $VERSION = '2.00';
+our $VERSION = '2.01';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.

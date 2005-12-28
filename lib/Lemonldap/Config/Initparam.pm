@@ -2,7 +2,7 @@ package Lemonldap::Config::Initparam;
 use Apache::Table;
 use Lemonldap::Config::Parameters;
 
-our $VERSION = '2.00';
+our $VERSION = '2.01';
 
 ##########################
 ##########################
@@ -153,7 +153,7 @@ my $tmpconf;
         'CERT_FILE' => 'CERT_FILE' ,
         'KEY_FILE'  => 'KEY_FILE',
 };
- my $CONF= Lemonldap::Config::ParametersV2->new (
+ my $CONF= Lemonldap::Config::Parameters->new (
                         file => $CONFIG{FILE} ,
 		       	cache => $CONFIG{GLUE} );
     if ($CONF) {
