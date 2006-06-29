@@ -3,4 +3,6 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
 2.0.0  Fri Oct  7 14:19:09 2005
 	- original version; created by h2xs 1.23 with options
 		-XAn Lemonldap::Config::Parameters
+3.0.0  Thu Jun 29 15:08:00 2006
+        - bigbang in parameters
 

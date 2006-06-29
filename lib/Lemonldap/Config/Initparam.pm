@@ -1,80 +1,122 @@
 package Lemonldap::Config::Initparam;
 use Apache::Table;
 use Lemonldap::Config::Parameters;
-
-our $VERSION = '2.01';
+use Data::Dumper;
+our $VERSION = '3.0.0';
 
 ##########################
 ##########################
 sub init_param_httpd {
 ##########################
 # parameter input 
+    my $log = shift;
     my ($__c) =@_;
 
 #declaration
     my %__config;
     my $__param  = {
-         'lemonldapportal' => 'PORTAL',
-        'lemonldapbasepub' => 'BASEPUB',
-        'lemonldapbasepriv' => 'BASEPRIV',
-        'lemonldapdomain'  => 'DOMAIN',
- 	'lemonldaphandlerid' => 'ID_HANDLER' ,
-	'lemonldapconfig' => 'FILE',
-	'lemonldapconfigipckey' => 'GLUE',
-	'lemonldapconfigttl' => 'TTL',
-	'lemonldapconfigdbpath' => 'GLUE',
-	'lemonldapenabledproxy' => 'PROXY',
-	'lemonldapproxyphase' => 'PROXY',
-#	'lemonldapipckey' => 'KEYIPC',
-	'lemonldappathdb' => 'PATHDB',
-#	'lemonldapcache2' => 'IPCNB',
-#	'lemonldapipcnb'  => 'IPCNB',
-        'lemonldapattrldap' => 'ATTRLDAP',
-        'lemonldapmajeur' => 'ATTRLDAP',
-        'lemonldapcodeappli' => 'LDAPCONTROL',
-        'lemonldapmineur' => 'LDAPCONTROL',
-        'lemonldapdisabled' => 'DISABLEDCONTROL',
-        'lemonldapsession' => 'CACHE',
-        'lemonldapstopcookie' => 'STOPCOOKIE',
-        'lemonldaprecursive' => 'RECURSIF',
-        'lemonldapproxyext' => 'PROXYEXT',
-        'lemonldapics' => 'ICS',
-        'lemonldapmultihoming' => 'MULTIHOMING',
-        'lemonldaplwptimeout' => 'LWPTIMEOUT',
-        'lemonldapsoftcontrol' =>'SOFTCONTROL', 
-        'lemonldapheader' =>'HEADER', 
-        'lemonldapallow' =>'ALLOW', 
-        'lemonldappluginpolicy' =>'PLUGINPOLICY', 
-	'lemonldappluginhtml' =>'PLUGINHTML', 
-        'lemonldappluginheader' =>'PLUGINHEADER',
-        'lemonldappluginbackend' =>'PLUGINBACKEND',
-         'lemonldphttps' =>'HTTPS' ,
-        'lemonldapauth' => 'AUTH',
-        'lemonldappkcs12' => 'PKCS12',
-        'lemonldappkcs12_pwd' => 'PKCS12_PWD',
-        'lemonldapcert_file' => 'CERT_FILE' ,
-        'lemonldapkey_file'  => 'KEY_FILE',    
-       
+	'portal' => 'PORTAL',
+        'basepub' => 'BASEPUB',
+	'loginpage' => 'LOGINPAGE',
+        'sslerrorpage' => 'SSLERRORPAGE',
+	'basepriv' => 'BASEPRIV',
+        'domain'  => 'DOMAIN',
+ 	'handlerid' => 'HANDLERID' ,
+	'configfile' => 'CONFIGFILE',
+	'configttl' => 'CONFIGTTL',
+	'configdbpath' => 'CONFIGDBPATH',
+	'enablelwp' => 'ENABLELWP',
+	'cachedbpath' => 'CACHEDBPATH',
+        'organization' => 'ORGANIZATION',
+        'applcode' => 'APPLCODE',
+        'disableaccesscontrol' => 'DISABLEACCESSCONTROL',
+        'sessionstore' => 'SESSIONSTORE',
+        'stopcookie' => 'STOPCOOKIE',
+        'chaseredirect' => 'CHASEREDIRECT',
+        'applproxy' => 'APPLPROXY',
+        'fastpatterns' => 'FASTPATTERNS',
+        'multihoming' => 'MULTIHOMING',
+        'lwptimeout' => 'LWPTIMEOUT',
+        'softcontrol' =>'SOFTCONTROL', 
+        'sendheader' =>'SENDHEADER', 
+        'allow' =>'ALLOW', 
+	'pluginpolicy' =>'PLUGINPOLICY', 
+	'regexpmatrixpolicy' =>'REGEXPMATRIXPOLICY', 
+	'rewritehtmlplugin' =>'REWRITEHTMLPLUGIN', 
+        'headerplugin' =>'HEADERPLUGIN',
+        'sessionstoreplugin' =>'SESSIONSTOREPLUGIN',
+	'ldapuserattributes' => 'LDAPUSERATTRIBUTES',
+        'https' =>'HTTPS' ,
+        'auth' => 'AUTH',
+        'pkcs12' => 'PKCS12',
+        'pkcs12_pwd' => 'PKCS12_PWD',
+        'cert_file' => 'CERT_FILE' ,
+        'key_file'  => 'KEY_FILE',    
+	'cookie' => 'COOKIE' ,
+	'accesspolicy' => 'ACCESSPOLICY',
+	'inactivitytimeout' => 'INACTIVITYTIMEOUT',
+	'encryptionkey' => 'ENCRYPTIONKEY',
+	'clientipcheck' => 'CLIENTIPCHECK',
+	'sesscacherefreshperiod' => 'SESSCACHEREFRESHPERIOD',
+	'motifin' =>'MOTIFIN',
+        'motifout' => 'MOTIFOUT',      
+	'ldap_server' => 'LDAP_SERVER', 
+	'ldap_port' => 'LDAP_PORT',
+	'ldapfilterattribute' => 'LDAPFILTERATTRIBUTE',
+	'dnmanager' => 'DNMANAGER',
+	'passwordmanager' => 'PASSWORDMANAGER',
+	'ldap_branch_people' => 'LDAP_BRANCH_PEOPLE',
+	'sessionparams' => 'SESSIONPARAMS',	
+	'commandopenssl' => 'COMMANDOPENSSL',
+	'doverify' => 'DOVERIFY',
+	'doocsp' => 'DOOCSP',
+	'doldap' => 'DOLDAP',
+	'verifycapath' => 'VERIFYCAPATH',
+	'verifyoptions' => 'VERIFYOPTIONS',
+	'ocspurl' => 'OCSPURL',
+	'ocspoptions' => 'OCSPOPTIONS',
+	'sslerrorcode' => 'SSLERRORCODE'
+
 };
 # input
-foreach (keys %$__c) {
+foreach (keys %$__c) 
+{
  my $lkey =lc($_);
  my $val = $__c->get($_);
+ #modif
+	if($lkey eq 'basepriv'){
+		if ($val=~/\/$/){
+			chop($val);
+
+		}
+	}
+
+ #modif 
+
  my $mkey = $__param->{$lkey};
- if ($mkey) {
- $__config{$mkey} = $val;
- }  else {print STDERR  "ERROR :lemonldap Initparam $_ : no valid parameter nam
-e \n"; }
+ if ($mkey) 
+ {
+  $__config{$mkey} = $val;
+ }else 
+ {
+  $log->error("lemonldap Initparam $_ : not valid parameter name"); 
  }
+}
 
-
-#    my $debug = Dumper (%__param );
-#    print STDERR  "param $debug\n";
-#     $debug = Dumper ($__c );
-#    print STDERR  "input $debug __\n";
-#    $debug = Dumper (%__config );
-#    print STDERR  "config $debug\n";
 ## work is done tel this 
+## load session info
+my $CONF= Lemonldap::Config::Parameters->new ( file => $__config{CONFIGFILE},cache => $__config{CONFIGDBPATH} );
+if( defined ($__config{SESSIONPARAMS}) ){
+	my $sessionparams= $__config{SESSIONPARAMS}; 
+	$__config{STR_SERVERS}=  $sessionparams;
+        $__config{SERVERS} = $CONF->formateLineHash ($sessionparams);	
+}
+elsif( defined ($__config{SESSIONSTORE}) ){
+	my $xmlsession= $CONF->findParagraph('session',$__config{SESSIONSTORE});
+	$__config{STR_SERVERS}=  $xmlsession->{SessionParams};
+	$__config{SERVERS} = $CONF->formateLineHash ($xmlsession->{SessionParams});
+}
+
 $__config{'HTTPD'} =1;
 
 return (\%__config );
@@ -93,88 +135,84 @@ my $GENERAL;
 my $tmpconf;
 	my $message;
     my $__param  = {
-     'Cookie' => 'COOKIE' ,
-     'Portal' => 'PORTAL',
-     'Session' => 'CACHE',  
-     'IpcKey' => 'KEYIPC',
-#     'IpcNb' => 'IPCNB' ,
-#     'DbPath' => 'KEYIPC',
-     'SoftControl' =>'SOFTCONTROL', 
-#	'DbPath' => 'DBPATH',
-	'Cache2' => 'IPCNB',
-        'LWPTimeout' =>'LWPTIMEOUT',
-        'Header' => 'HEADER' ,       
-        'Allow' =>'ALLOW',
-        'PlugInPolicy' =>'PLUGINPOLICY', 
-        'PlugInHtml' =>'PLUGINHTML', 
-        'PlugInBackend' =>'PLUGINBACKED',
-        'PlugInHeader' =>'PLUGINHEADER',
-        'HTTPS' =>'HTTPS' ,
-        'AUTH' => 'AUTH',
-        'PKCS12' => 'PKCS12',
-        'PKCS12_PWD' => 'PKCS12_PWD',
-        'CERT_FILE' => 'CERT_FILE' ,
-        'KEY_FILE'  => 'KEY_FILE',
+	'inactivitytimeout' => 'INACTIVITYTIMEOUT',
+        'encryptionkey' => 'ENCRYPTIONKEY',
+	'clientipcheck' => 'CLIENTIPCHECK',
+        'cookie' => 'COOKIE' ,
+        'portal' => 'PORTAL',
+        'sessionstore' => 'SESSIONSTORE',  
+        'softcontrol' =>'SOFTCONTROL', 
+	'sesscacherefreshperiod' => 'SESSCACHEREFRESHPERIOD',
+        'lwptimeout' =>'LWPTIMEOUT',
+        'sendheader' => 'SENDHEADER' ,       
+        'allow' =>'ALLOW',
+        'pluginpolicy' =>'PLUGINPOLICY', 
+        'rewritehtmlplugin' =>'REWRITEHTMLPLUGIN', 
+        'sessionstoreplugin' =>'SESSIONSTOREPLUGIN',
+        'headerplugin' =>'HEADERPLUGIN',
+        'https' =>'HTTPS' ,
+        'auth' => 'AUTH',
+        'pkcs12' => 'PKCS12',
+        'pkcs12_pwd' => 'PKCS12_PWD',
+        'cert_file' => 'cert_file' ,
+        'key_file'  => 'key_file',
+	'ldap_server' => 'LDAP_SERVER',
+        'ldap_port' => 'LDAP_PORT',
+        'dnmanager' => 'DNMANAGER',
+        'passwordmanager' => 'PASSWORDMANAGER',
+        'ldap_branch_people' => 'LDAP_BRANCH_PEOPLE'
 };
   my $__param_loc  = {
-     'Enabledproxy' => 'PROXY' ,
- #    'IpcKey' => 'KEYIPC',
- #    'IpcNb' => 'IPCNB' ,
-     'AttrLdap' =>'ATTRLDAP',
-     'CodeAppli' => 'LDAPCONTROL',
-     'Disabled' => 'DISABLEDCONTROL' ,
-     'BasePub' => 'BASEPUB' ,
-     'BasePriv' => 'BASEPRIV',
-     'StopCookie' => 'STOPCOOKIE' ,
-     'Recursive' => 'RECURSIF' ,
-     'Portal' =>     'PORTAL',      
-     'Proxyphase' => 'PROXY',
-#	'DbPath' => 'KEYIPC',
-#	'DbPath' => 'DBPATH',
-#	'Cache2' => 'IPCNB',
-        'Majeur' => 'ATTRLDAP',
-        'Mineur' => 'LDAPCONTROL',
-        'Ics' => 'ICS',
-        'MultiHoming' => 'MULTIHOMING',
-        'MotifIn' =>'MOTIFIN',
-        'MotifOut' => 'MOTIFOUT', 
-        'LWPTimeout' => 'LWPTIMEOUT',
-        'SoftControl' =>'SOFTCONTROL', 
-        'Header' => 'HEADER',        
-        'Allow' =>'ALLOW',
-        'PlugInPolicy' =>'PLUGINPOLICY', 
-        'PlugInHtml' =>'PLUGINHTML', 
-        'PlugInBackend' =>'PLUGINBACKED',
-        'PlugInHeader' =>'PLUGINHEADER',
-        'HTTPS' =>'HTTPS' ,
-        'AUTH' => 'AUTH',
-        'PKCS12' => 'PKCS12',
-        'PKCS12_PWD' => 'PKCS12_PWD',
-        'CERT_FILE' => 'CERT_FILE' ,
-        'KEY_FILE'  => 'KEY_FILE',
+	'enablelwp' => 'ENABLELWP' ,
+        'organization' =>'ORGANIZATION',
+        'applcode' => 'APPLCODE',
+        'disableaccessControl' => 'DISABLEACCESSCONTROL' ,
+        'basepub' => 'BASEPUB' ,
+        'basepriv' => 'BASEPRIV',
+        'stopcookie' => 'STOPCOOKIE' ,
+        'chaseredirect' => 'CHASEREDIRECT' ,
+        'portal' =>     'PORTAL',      
+        'fastpatterns' => 'FASTPATTERNS',
+        'multihoming' => 'MULTIHOMING',
+        'motifin' =>'MOTIFIN',
+        'motifout' => 'MOTIFOUT', 
+        'lwptimeout' => 'LWPTIMEOUT',
+        'softcontrol' =>'SOFTCONTROL', 
+        'sendheader' => 'SENDHEADER',        
+        'allow' =>'ALLOW',
+        'pluginpolicy' =>'PLUGINPOLICY', 
+        'rewritehtmlplugin' =>'REWRITEHTMLPLUGIN', 
+        'sessionstoreplugin' =>'SESSIONSTOREPLUGIN',
+        'headerplugin' =>'HEADERPLUGIN',
+        'https' =>'HTTPS' ,
+        'auth' => 'AUTH',
+        'pkcs12' => 'PKCS12',
+        'pkcs12_PWD' => 'PKCS12_PWD',
+        'cert_file' => 'CERT_FILE' ,
+        'key_file'  => 'KEY_FILE',
 };
  my $CONF= Lemonldap::Config::Parameters->new (
-                        file => $CONFIG{FILE} ,
-		       	cache => $CONFIG{GLUE} );
+                        file => $CONFIG{CONFIGFILE} ,
+		       	cache => $CONFIG{CONFIGDBPATH} );
     if ($CONF) {
-	$message="$CONFIG{ID_HANDLER}: Phase : handler initialization LOAD XML conf :succeded"; } 
+	$message="$CONFIG{HANDLERID}: Phase : handler initialization LOAD XML conf :succeded"; } 
 	 else {
-	$message="$CONFIG{ID_HANDLER}: Phase : handler initialization LOAD XML conf : failed";
+	$message="$CONFIG{HANDLERID}: Phase : handler initialization LOAD XML conf : failed";
 		}
     if ($CONFIG{DOMAIN}) {
        $GENERAL = $CONF->getDomain($CONFIG{DOMAIN}) ;
-       $tmpconf = $GENERAL->{handler}->{$CONFIG{ID_HANDLER}};
+       $tmpconf = $GENERAL->{handler}->{$CONFIG{HANDLERID}};
  foreach (keys %$__param )  {
 my $key = $__param->{$_};
  $__config{$key} = $GENERAL->{lc($_)} if defined ($GENERAL->{lc($_)}) ;
  } 
      
                 }  else                 {
-        $tmpconf= $CONF->{$CONFIG{ID_HANDLER}} ;
+        $tmpconf= $CONF->{$CONFIG{HANDLERID}} ;
                         }
 ##  load session info 
-my $xmlsession= $CONF->findParagraph('session',$__config{CACHE});
-$__config{STR_SERVERS}=  $xmlsession; 
+my $xmlsession= $CONF->findParagraph('session',$__config{SESSIONSTORE});
+$__config{STR_SERVERS}=  $xmlsession->{SessionParams}; 
 $__config{SERVERS} = $CONF->formateLineHash ($xmlsession->{SessionParams});
 
 			
@@ -293,8 +331,8 @@ my %tmp= %$_tmp;
 foreach (keys %tmp ){
 $__config{$_} = $tmp{$_} ;
 } 
-my $id =$__config{ID_HANDLER}."/".$mh ;
-$__config{ID_HANDLER} = $id;
+my $id =$__config{HANDLERID}."/".$mh ;
+$__config{HANDLERID} = $id;
 $__config{XML}=1;
 return (\%__config);
 

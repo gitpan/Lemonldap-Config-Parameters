@@ -1,94 +1,81 @@
-Lemonldap-Config-Parameters version 2.00
-========================================
-
 NAME
     Lemonldap::Config::Parameters - Backend of configuration for lemonldap
     SSO system
 
+SYNOPSIS
+     #!/usr/bin/perl 
+     use Lemonldap::Config::Parameters;
+     use Data::Dumper;
+     my $nconfig= Lemonldap::Config::Parameters->new(
+                                file  =>'applications.xml',
+                                cache => '/tmp/CONF' );
+     my $conf= $nconfig->getAllConfig;
+     my $cg=$nconfig->getDomain('appli.cp');
+     my $ligne= $cg;
+     print Dumper( $ligne);
+     my $e = $cg->{templates_options} ;
+     my $opt= "templates_dir";
+     my $va = $cg->{$opt};
+     my $ligne= $nconfig->formateLineHash($e,$opt,$va) ;
 
+    or by API :
+
+    Lemonldap::Config::Parameters::f_delete('/tmp/CONF');
+
+    or by command line
+
+    perl -e "use Lemonldap::Config::Parameters;
+    Lemonldap::Config::Parameters::f_delete('/tmp/CONF');"
 
 INSTALLATION
-
-To install this module type the following:
-
-   perl Makefile.PL
-   make
-   make install
-
-
-SYNOPSIS
-      #!/usr/bin/perl 
-      use Lemonldap::Config::Parameters;
-      use Data::Dumper;
-      my $nconfig= Lemonldap::Config::Parameters->new(
-                                 file  =>'applications.xml',
-                                 cache => 'CONF' );
-      my $conf= $nconfig->getAllConfig;
-      my $cg=$nconfig->getDomain('appli.cp');
-      my $ligne= $cg;
-      print Dumper( $ligne);
-      my $e = $cg->{templates_options} ;
-      my $opt= "templates_dir";
-      my $va = $cg->{$opt};
-      my $ligne= $nconfig->formateLineHash($e,$opt,$va) ;
-
-     or by API :
-
-     Lemonldap::Config::Parameters::f_delete('CONF');
-
-     or by command line 
-
-     perl -e "use Lemonldap::Config::Parameters;
-    Lemonldap::Config::Parameters::f_delete('CONF');"
-  
+     perl Makefile.PL
+     make
+     make test 
+     make install
+ 
 DESCRIPTION
-    Lemonldap is a SSO system under GPL.
+    Lemonldap is a WEB SSO framework system under GPL.
 
     Login page , handlers must retrieve their configs in an unique file eg
     :"applications.xml".
 
     This file has a XML structrure. The parsing phase may be heavy, so
-    lemonldap can cache the result of parsing in memory with IPC. For
+    lemonldap can cache the result of parsing in berkeleyDB file. For
     activing the cache you must have in the config :
 
-     <cache id="CONF" ConfigTtl="1000"
-                        LastModifed="1"> 
+     <cache id="/tmp/CONF"> 
      </cache> 
- 
-    with : name='CONF' it's the GLUE value : four letters (see
-    IPC::Shareable documentation). Ttl: time to live in second ( 0 for not
-    reload ) if ttl is too short the config file will be reload very offen .
 
-            LastModified="1"  If true , you can force the reload  after anything modification on file  
+    with : name='/tmp/CONF' it will be the file name used for berkeley file.
 
-     You can force the reload off file by the command line bellow:
+    The berkelay cache will be reloaded at every file modification You can
+    force the reload off file by the command line bellow:
 
-     perl -e "use Lemonldap::Config::Parameters;
-     Lemonldap::Config::Parameters::f_reload('CONF');"
+    perl -e "use Lemonldap::Config::Parameters;
+    Lemonldap::Config::Parameters::f_reload('/tmp/CONF');"
 
-     or 
+    or
 
-     perl -e "use Lemonldap::Config::Parameters;
-     Lemonldap::Config::Parameters::f_delete('CONF');"
+    perl -e "use Lemonldap::Config::Parameters;
+    Lemonldap::Config::Parameters::f_delete('CONF');"
 
     IMPORTANT : the user's ID who runs those scripts MUST be the same of the
-    IPC cache's owner !!
+    berkeleyDB file's owner !!
 
-     WITHOUT CACHE SPECIFICATION , LEMONLDAP DOESN'T USE CACHE ! It  will read and
-    parse config file each time.
- 
+    WITHOUT CACHE SPECIFICATION , LEMONLDAP DOESN'T USE CACHE ! It will read
+    and parse config file each time.
+
 METHODS
   new  (file  =>'/foo/my_xml_file.xml' ,
-                 cache => 'CONF' );  # with IPC cache
-     or 
-            new(file  =>'/foo/my_xml_file.xml');     # without IPC  cache
+                cache => '/tmp/CONF' );  # with berkelay cache
+    or new(file =>'/foo/my_xml_file.xml'); # without berkeleyDB cache
 
   getAllConfig
-     Return the  reference of hash  storing whole the config.
+    Return the reference of hash storing whole the config.
 
   getDomain('foo.bar')
-     Return the reference of hash of config for domain  
-     If the config file has only one domain , domain may bo omit .  
+    Return the reference of hash of config for domain If the config file has
+    only one domain , domain may bo omit .
 
     eg : for the xml config file : <domain name="foo.bar" cookie=".foo.bar"
     path ="/" templates_dir="/opt/apache/portail/templates"
@@ -99,50 +86,45 @@ METHODS
     passwordManager="secret" branch_people="ou=mefi,dc=foo,dc=bar"
     session="memcached" > </domain>
 
-        my $cg = $nconfig->getDomain();
+       my $cg = $nconfig->getDomain();
 
-      DB<2> x $cg
-       0  HASH(0x89b108c)
-        'DnManager' => 'cn=Directory Manager'
-        'branch_people' => 'ou=mefi,dc=foo,dc=bar'
-        'cookie' => '.foo.bar'
-        'ldap_port' => 389
-        'ldap_server' => 'cpldap.foo.bar'
-        'login' => 'http://cportail.foo.bar/portail/accueil.pl'
-        'menu' => 'http://cportail.foo.bar/portail/application.pl'
-        'passwordManager' => 'secret'
-        'path' => '/'
-        'session' => 'memcached'
-        'templates_dir' => '/opt/apache/portail/templates'
-        'templates_options' => 'ABSOLUTE => \'1\', INCLUDE_PATH => \'templates_dir\'
+     DB<2> x $cg
+      0  HASH(0x89b108c)
+       'DnManager' => 'cn=Directory Manager'
+       'branch_people' => 'ou=mefi,dc=foo,dc=bar'
+       'cookie' => '.foo.bar'
+       'ldap_port' => 389
+       'ldap_server' => 'cpldap.foo.bar'
+       'login' => 'http://cportail.foo.bar/portail/accueil.pl'
+       'menu' => 'http://cportail.foo.bar/portail/application.pl'
+       'passwordManager' => 'secret'
+       'path' => '/'
+       'session' => 'memcached'
+       'templates_dir' => '/opt/apache/portail/templates'
+       'templates_options' => 'ABSOLUTE => \'1\', INCLUDE_PATH => \'templates_dir\'
 
   ref_of_hash : formateLineHash(string:line);
-         or  formateLineHash(string:line,string:motif,string:key);
+        or  formateLineHash(string:line,string:motif,string:key);
 
-     Return a anonyme reference on  hash  and may replace the motif in the value of
-    key by the value of another key  :
+    Return a anonyme reference on hash and may replace the motif in the
+    value of key by the value of another key :
 
-     eg 
+    eg
 
-     my $e = $cg->{templates_options} ;
-     my $opt= "templates_dir";
-     my $va = $cg->{$opt};
-     my $ligne= $nconfig->formateLineHash($e,$opt,$va) ;
+    my $e = $cg->{templates_options} ; my $opt= "templates_dir"; my $va =
+    $cg->{$opt}; my $ligne= $nconfig->formateLineHash($e,$opt,$va) ;
 
-     gives :  
-      DB<1> x $ligne
-     0  HASH(0x848b778)
-       'ABSOLUTE' => 1
-       'INCLUDE_PATH' => '/opt/apache/portail/templates'
+    gives : D1 x $ligne 0 HASH(0x848b778) 'ABSOLUTE' => 1 'INCLUDE_PATH' =>
+    '/opt/apache/portail/templates'
 
-      $ligne can be use directly like option for somes instructions
+     $ligne can be use directly like option for somes instructions
 
   ref_of_array : formateLineArray(string:line);
 or  formateLineArray(string:line,string:motif,string:key);
     Return a anonyme reference on array and may replace the motif in the
     element by the value of another key :
 
-      the return value can be use directly like option for somes instructions
+     the return value can be use directly like option for somes instructions
 
   findParagraph(chapter[,section])
     Find and return a reference of chapter finds in xml file , a section can
@@ -150,51 +132,48 @@ or  formateLineArray(string:line,string:motif,string:key);
 
 Functions
   Lemonldap::Config::Parameters::f_delete('CONF');
-     Delete the cache and the restore segment
+    Delete the cache and the restore segment
 
   Lemonldap::Config::Parameters::f_reload('CONF');
-     The next acces on cache will need to read file before .
+    The next acces on cache will need to read file before .
 
   Lemonldap::Config::Parameters::f_dump('CONF');
-     Dump of the config 
+    Dump of the config
 
 SOAP server facility .
-     With version of Config::parameters > 0.3 we can use an unique file of configuration 
-     whi can be retrieve by the lemonldap SSO boxes with SOAP agents .
-     On the central server you MUST use SOAP server in combinaison with apache , mod_perl and SOAP::Lite 
-     Like this :
-     (httpd.conf)  
-      <location /conf_lemonldap>
-        Options +execcgi
-        SetHandler perl-script
-        PerlHandler Apache::SOAP
-        PerlSetVar dispatch_to  'SOAPserver'
-      </location>
+     Don't use this ,I 'll rewrite all SOAP facility
+
+     <location /conf_lemonldap>
+       Options +execcgi
+       SetHandler perl-script
+       PerlHandler Apache::SOAP
+       PerlSetVar dispatch_to  'SOAPserver'
+     </location>
 
     Important : You MUST place SOAPserver.pm under the apache's directory :
     eg : /usr/local/apache/
 
-     In XML file config :
-  
-       <cache  id="config1"
-            ConfigIpcKey="CONF"
-            ConfigTtl ="10000000"
-            LastModified='1'
-            Method="SOAP" 
-            SoapUri="http://www.portable.appli.cp/SOAPserver"
-            SoapProxy="http://www.portable.appli.cp/conf_lemonldap"
+      <cache  id="config1"
+           ConfigIpcKey="CONF"
+           ConfigTtl ="10000000"
+           LastModified='1'
+           Method="SOAP" 
+           SoapUri="http://www.portable.appli.cp/SOAPserver"
+           SoapProxy="http://www.portable.appli.cp/conf_lemonldap" 
             SoapAgent="['http://localhost/cgi-bin/refresh.cgi','http://www.portable.appli.cp/perl/refresh.cgi']"
-         >
+        >
 
-     with :SoapUri and SoapProxy : see SOAP::Lite documentation 
-           SoapAgent : the list of agents CGI  on lemonldap server who must to be call in the case of modification
+    with :SoapUri and SoapProxy : see SOAP::Lite documentation SoapAgent :
+    the list of agents CGI on lemonldap server who must to be call in the
+    case of modification
 
-      After that agent receive notification , they do a soap request upon the administration server  for reload the lastnew config .
-      If it's fail , slave lemonldap uses a local file XML which is the lastest copy of file config .
+     After that agent receive notification , they do a soap request upon the administration server  for reload the lastnew config .
+     If it's fail , slave lemonldap uses a local file XML which is the lastest copy of file config .
 
-     An agent lemonldap MAY to be in same server that the SOAP manager. So SOAP manager uses 'conf' instead 'CONF' for the IPC glue .
-     It 'll be two IPC segments 'CONF' and 'conf'  'CONF' for agent 'conf' for SOAP server ,but don't worry it's an internal process ,
-     stay to use 'CONF' .
+    An agent lemonldap MAY to be in same server that the SOAP manager. So
+    SOAP manager uses 'conf' instead 'CONF' for the IPC glue . It 'll be two
+    IPC segments 'CONF' and 'conf' 'CONF' for agent 'conf' for SOAP server
+    ,but don't worry it's an internal process , stay to use 'CONF' .
 
 SEE ALSO
     Lemonldap(3), Lemonldap::Portal::Standard
@@ -204,7 +183,7 @@ SEE ALSO
     "Writing Apache Modules with Perl and C" by Lincoln Stein & Doug
     MacEachern - O'REILLY
 
-     See the examples directory
+    See the examples directory
 
 AUTHORS
     Eric German, <germanlinux@yahoo.fr>
@@ -221,18 +200,16 @@ COPYRIGHT AND LICENSE
     Portions are copyrighted under the same license as Perl itself.
     Portions are copyrighted by Doug MacEachern and Lincoln Stein. This
     library is under the GNU General Public License, Version 2.
-      This program is free software; you can redistribute it and/or modify
-      it under the terms of the GNU General Public License as published by
-      the Free Software Foundation; version 2 dated June, 1991.
+     This program is free software; you can redistribute it and/or modify
+     it under the terms of the GNU General Public License as published by
+     the Free Software Foundation; version 2 dated June, 1991.
 
-      This program is distributed in the hope that it will be useful,
-      but WITHOUT ANY WARRANTY; without even the implied warranty of
-      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-      GNU General Public License for more details.
+     This program is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     GNU General Public License for more details.
 
-      A copy of the GNU General Public License is available in the source tree;
-      if not, write to the Free Software Foundation, Inc.,
-      59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-
-
+     A copy of the GNU General Public License is available in the source tree;
+     if not, write to the Free Software Foundation, Inc.,
+     59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
