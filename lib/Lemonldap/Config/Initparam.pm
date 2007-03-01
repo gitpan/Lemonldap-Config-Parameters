@@ -1,8 +1,8 @@
 package Lemonldap::Config::Initparam;
-use Apache::Table;
+use APR::Table;
 use Lemonldap::Config::Parameters;
 use Data::Dumper;
-our $VERSION = '3.0.0';
+our $VERSION = '3.1.0';
 
 ##########################
 ##########################
@@ -75,7 +75,10 @@ sub init_param_httpd {
 	'verifyoptions' => 'VERIFYOPTIONS',
 	'ocspurl' => 'OCSPURL',
 	'ocspoptions' => 'OCSPOPTIONS',
-	'sslerrorcode' => 'SSLERRORCODE'
+	'sslerrorcode' => 'SSLERRORCODE',
+        'postlogouturl' => 'POSTLOGOUTURL',
+        'directorytype' => 'DIRECTORYTYPE',
+        'excluderegex' => 'EXCLUDEREGEX',
 
 };
 # input

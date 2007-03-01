@@ -1,6 +1,6 @@
 NAME
     Lemonldap::Config::Parameters - Backend of configuration for lemonldap
-    SSO system
+    web SSO system
 
 SYNOPSIS
      #!/usr/bin/perl 

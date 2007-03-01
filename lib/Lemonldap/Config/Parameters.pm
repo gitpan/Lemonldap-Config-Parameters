@@ -1,14 +1,12 @@
 package Lemonldap::Config::Parameters;
 use strict;
-#use warnings;
-#use IPC::Shareable;
 use BerkeleyDB;
 use XML::Simple;
 use Data::Dumper;
 use Storable qw (thaw);
 use LWP::UserAgent();
 
-our $VERSION = '3.0.0';
+our $VERSION = '3.1.0';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
@@ -188,7 +186,6 @@ sub _retrieve_on_soap {
    );
 
    #my $res=$hl->SOAP::retrieve ;
-  print STDERR "Config::Parameters WARNING : SOAP server :$proxy don't answer\n"   unless $hl->{config}; 
   return $hl->{config};
 }
 
@@ -352,12 +349,8 @@ if ( $self->{method} ) {
             my $glue =uc ($self->{cache});
             my $ua = LWP::UserAgent->new (timeout => 30);
             for my $l (@soapagent) {
-#             my $req =HTTP::Request->new (GET => "$l?glue=$glue");    
-#             print STDERR $req->as_string; 
                      my $res  =$ua->get ("$l?glue=$glue");
-             if ($res->is_error) {
-                                   print STDERR  "WARNING Config::Parameters : error on  $l for SOAP service\n";
-             }
+
              }
              }
 
