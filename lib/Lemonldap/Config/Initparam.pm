@@ -2,7 +2,7 @@ package Lemonldap::Config::Initparam;
 use APR::Table;
 use Lemonldap::Config::Parameters;
 use Data::Dumper;
-our $VERSION = '3.1.0';
+our $VERSION = '3.1.1';
 
 ##########################
 ##########################
