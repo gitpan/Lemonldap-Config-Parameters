@@ -6,7 +6,7 @@ use Data::Dumper;
 use Storable qw (thaw);
 use LWP::UserAgent();
 
-our $VERSION = '3.1.1';
+our $VERSION = '3.2.0';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
@@ -695,13 +695,11 @@ See the examples directory
 
 =item Eric German, E<lt>germanlinux@yahoo.frE<gt>
 
-=item Xavier Guimard, E<lt>x.guimard@free.frE<gt>
-
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by Eric German E<amp> Xavier Guimard
+Copyright (C) 2004 by Eric German
 
 Lemonldap originaly written by Eric german who decided to publish him in 2003
 under the terms of the GNU General Public License version 2.

@@ -132,7 +132,7 @@ return (\%__config );
 sub init_param_xml {
 ##########################
 my ($cn ) = @_;
-my $__config;
+my %__config;
 my %CONFIG=%$cn;
 my $GENERAL;
 my $tmpconf;
