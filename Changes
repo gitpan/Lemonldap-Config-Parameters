@@ -10,3 +10,5 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
         - giving up compatibility with old modperl API.
 3.1.1 Fri  Mar 16 13:05:15 2007
         - increase management of cache
+3.2.1  Sep 22  2007
+       - add parameters in order to rewrite html  with LWP engine.

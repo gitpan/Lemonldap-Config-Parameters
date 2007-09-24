@@ -79,6 +79,7 @@ sub init_param_httpd {
         'postlogouturl' => 'POSTLOGOUTURL',
         'directorytype' => 'DIRECTORYTYPE',
         'excluderegex' => 'EXCLUDEREGEX',
+	'rewritehtml' => 'REWRITEHTML',
 
 };
 # input
@@ -163,7 +164,8 @@ my $tmpconf;
         'ldap_port' => 'LDAP_PORT',
         'dnmanager' => 'DNMANAGER',
         'passwordmanager' => 'PASSWORDMANAGER',
-        'ldap_branch_people' => 'LDAP_BRANCH_PEOPLE'
+        'ldap_branch_people' => 'LDAP_BRANCH_PEOPLE',
+	'rewritehtml' => 'REWRITEHTML',
 };
   my $__param_loc  = {
 	'enablelwp' => 'ENABLELWP' ,
@@ -193,6 +195,7 @@ my $tmpconf;
         'pkcs12_PWD' => 'PKCS12_PWD',
         'cert_file' => 'CERT_FILE' ,
         'key_file'  => 'KEY_FILE',
+	'rewritehtml' => 'REWRITEHTML',
 };
  my $CONF= Lemonldap::Config::Parameters->new (
                         file => $CONFIG{CONFIGFILE} ,
