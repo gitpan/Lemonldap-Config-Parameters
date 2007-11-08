@@ -12,3 +12,6 @@ Revision history for Perl extension Lemonldap::Config::Parameters.
         - increase management of cache
 3.2.1  Sep 22  2007
        - add parameters in order to rewrite html  with LWP engine.
+3.2.2  Otc 24  2007
+       - add parameters in order to manage Timeout in CDA context.
+       - add sourceredirection and targetredirection in order to rewrite location header. 
