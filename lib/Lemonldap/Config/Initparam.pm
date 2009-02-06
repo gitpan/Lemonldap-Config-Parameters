@@ -41,6 +41,7 @@ sub init_param_httpd {
         'sendheader' =>'SENDHEADER', 
         'allow' =>'ALLOW', 
 	'pluginpolicy' =>'PLUGINPOLICY', 
+	'pluginheader' =>'PLUGINHEADER', 
 	'regexpmatrixpolicy' =>'REGEXPMATRIXPOLICY', 
 	'rewritehtmlplugin' =>'REWRITEHTMLPLUGIN', 
         'headerplugin' =>'HEADERPLUGIN',
