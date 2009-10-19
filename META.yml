@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Lemonldap-Config-Parameters
-version:             3.2.3
+version:             3.2.4
 abstract:            Backend of configuration for lemonldap SSO system
 license:             ~
 author:              

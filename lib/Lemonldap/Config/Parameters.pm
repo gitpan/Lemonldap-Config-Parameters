@@ -6,7 +6,7 @@ use Data::Dumper;
 use Storable qw (thaw);
 use LWP::UserAgent();
 
-our $VERSION = '3.2.3';
+our $VERSION = '3.2.4';
 our %IPC_CONFIG;
 
 # Preloaded methods go here.
